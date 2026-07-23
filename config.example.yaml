@@ -1,0 +1,25 @@
+# Copie este arquivo para config.yaml e ajuste os caminhos para a sua maquina.
+# config.yaml NAO deve ser commitado (contem caminhos pessoais).
+
+# Pasta local sincronizada pelo Google Drive Desktop onde o Atalho do iPhone
+# salva os audios (ver docs/ios-shortcut-setup.md).
+inbox_dir: "G:\\Meu Drive\\VoiceCaptures\\inbox"
+
+# Pasta dentro do seu vault do Obsidian onde as notas processadas vao aparecer.
+vault_inbox_dir: "C:\\Users\\Hellena\\ObsidianVault\\Inbox\\Voz"
+
+# Onde o pipeline guarda estado, audio arquivado e transcricoes brutas.
+# Pode ser relativo (fica dentro do repositorio) ou absoluto.
+data_dir: "data"
+
+# Tamanho do modelo Whisper local: tiny, base, small, medium, large-v3.
+# "small" e um bom equilibrio entre velocidade e qualidade em CPU comum.
+whisper_model: "small"
+whisper_language: "pt"
+
+# Modelo da Claude API usado para sintese/classificacao (so texto e enviado).
+anthropic_model: "claude-sonnet-5"
+
+# Depois de quantos dias um audio ja processado com sucesso pode ser apagado
+# por "python -m voice_capture.cleanup" (comando manual, nao automatico).
+audio_retention_days: 30

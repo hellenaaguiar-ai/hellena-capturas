@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "voice-capture"
+version = "0.1.0"
+description = "Captura pessoal de pensamentos por voz com processamento automatico e integracao com Obsidian"
+requires-python = ">=3.11"
+dependencies = [
+    "faster-whisper>=1.0.0",
+    "anthropic>=0.40.0",
+    "PyYAML>=6.0",
+    "python-dotenv>=1.0.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
