@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from .ai_client import call_structured_tool
+
 POSSIBLE_USES = [
     "Second Brain",
     "Investigação",
@@ -138,25 +140,13 @@ class ProcessedCapture:
 
 
 def process_transcript(raw_text: str, api_key: str, model: str) -> ProcessedCapture:
-    import anthropic
-
-    client = anthropic.Anthropic(api_key=api_key)
-    response = client.messages.create(
+    data = call_structured_tool(
+        system_prompt=SYSTEM_PROMPT,
+        tool_schema=TOOL_SCHEMA,
+        user_content=f"Transcricao bruta a estruturar:\n\n{raw_text}",
+        api_key=api_key,
         model=model,
-        max_tokens=2048,
-        system=SYSTEM_PROMPT,
-        tools=[TOOL_SCHEMA],
-        tool_choice={"type": "tool", "name": "structure_voice_capture"},
-        messages=[
-            {
-                "role": "user",
-                "content": f"Transcricao bruta a estruturar:\n\n{raw_text}",
-            }
-        ],
     )
-
-    tool_use = next(b for b in response.content if b.type == "tool_use")
-    data = tool_use.input
     return ProcessedCapture(
         title=data["title"],
         synthesis=data["synthesis"],

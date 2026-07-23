@@ -2,13 +2,15 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import yaml
 from dotenv import load_dotenv
 
 DEFAULT_CONFIG_PATH = Path("config.yaml")
+
+DEFAULT_HOTKEYS = {"idea": "ctrl+alt+i", "meeting": "ctrl+alt+r", "therapy": "ctrl+alt+t"}
 
 
 @dataclass(frozen=True)
@@ -21,6 +23,9 @@ class Config:
     anthropic_model: str
     anthropic_api_key: str
     audio_retention_days: int
+    vault_meeting_dir: Path
+    vault_therapy_dir: Path
+    hotkeys: dict = field(default_factory=lambda: dict(DEFAULT_HOTKEYS))
 
     @property
     def audio_archive_dir(self) -> Path:
@@ -29,6 +34,10 @@ class Config:
     @property
     def transcripts_raw_dir(self) -> Path:
         return self.data_dir / "transcripts_raw"
+
+    @property
+    def desktop_audio_dir(self) -> Path:
+        return self.data_dir / "desktop_recordings"
 
     @property
     def state_file(self) -> Path:
@@ -46,9 +55,12 @@ class Config:
         for d in (
             self.inbox_dir,
             self.vault_inbox_dir,
+            self.vault_meeting_dir,
+            self.vault_therapy_dir,
             self.data_dir,
             self.audio_archive_dir,
             self.transcripts_raw_dir,
+            self.desktop_audio_dir,
         ):
             d.mkdir(parents=True, exist_ok=True)
 
@@ -70,13 +82,21 @@ def load_config(path: Path | str = DEFAULT_CONFIG_PATH) -> Config:
             "preencha a chave."
         )
 
+    vault_inbox_dir = Path(raw["vault_inbox_dir"])
+    desktop_raw = raw.get("desktop", {}) or {}
+    hotkeys = dict(DEFAULT_HOTKEYS)
+    hotkeys.update(desktop_raw.get("hotkeys", {}) or {})
+
     return Config(
         inbox_dir=Path(raw["inbox_dir"]),
-        vault_inbox_dir=Path(raw["vault_inbox_dir"]),
+        vault_inbox_dir=vault_inbox_dir,
         data_dir=Path(raw.get("data_dir", "data")),
         whisper_model=raw.get("whisper_model", "small"),
         whisper_language=raw.get("whisper_language", "pt"),
         anthropic_model=raw.get("anthropic_model", "claude-sonnet-5"),
         anthropic_api_key=api_key,
         audio_retention_days=int(raw.get("audio_retention_days", 30)),
+        vault_meeting_dir=Path(desktop_raw.get("vault_meeting_dir", vault_inbox_dir.parent / "Reuniões")),
+        vault_therapy_dir=Path(desktop_raw.get("vault_therapy_dir", vault_inbox_dir.parent / "Terapia")),
+        hotkeys=hotkeys,
     )

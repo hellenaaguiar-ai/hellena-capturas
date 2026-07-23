@@ -17,3 +17,14 @@ def sha256_file(path: Path) -> str:
 
 def short_hash(full_hash: str, length: int = 10) -> str:
     return full_hash[:length]
+
+
+def combined_hash(paths: list[Path]) -> str:
+    """Hash estavel para um conjunto de arquivos (ex: trilhas mic+sistema
+    da mesma gravacao), usado como chave de dedupe."""
+    digest = hashlib.sha256()
+    for path in paths:
+        if path is None:
+            continue
+        digest.update(sha256_file(path).encode("ascii"))
+    return digest.hexdigest()

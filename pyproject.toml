@@ -14,5 +14,13 @@ dependencies = [
     "python-dotenv>=1.0.0",
 ]
 
+[project.optional-dependencies]
+desktop = [
+    "soundcard>=0.4.3",
+    "keyboard>=0.13.5",
+    "plyer>=2.1.0",
+    "numpy>=1.24",
+]
+
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -1,0 +1,203 @@
+"""Processamento por IA dos modos desktop (reuniao/aula e terapia).
+
+Mesmas regras de autoria do modo ideia: nao inventar, nao completar, nao
+transformar inferencia em fato. O modo terapia tem uma regra extra: nao
+diagnosticar nem interpretar psicologicamente alem do que foi dito.
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+
+from .ai_client import call_structured_tool
+
+CONFIDENCE_LEVELS = ["baixa", "media", "alta"]
+
+COMMON_RULES = """\
+Regras obrigatorias, sem excecao:
+- Nao invente informacao que nao foi dita por nenhum dos dois lados.
+- Nao complete ideias que nao foram ditas.
+- Nao transforme inferencias em fatos.
+- Preserve o vocabulario e a intencao original de cada pessoa.
+- Se nao houver base para preencher um campo, deixe-o vazio - nao invente \
+conteudo so para nao deixar um campo vazio.
+- Se algo estiver ambiguo, use confidence "baixa" e explique em \
+uncertainty_notes."""
+
+# ---------------------------------------------------------------------------
+# Reuniao / aula
+# ---------------------------------------------------------------------------
+
+MEETING_SYSTEM_PROMPT = f"""\
+Voce processa a transcricao de uma reuniao ou aula, ja dividida em duas \
+trilhas: o que a pessoa dona do computador disse (microfone) e o que as \
+outras pessoas/o audio do computador reproduziu (sistema). O texto de \
+entrada ja vem rotulado indicando qual trecho e de qual trilha.
+
+{COMMON_RULES}
+- Decisoes e itens de acao so entram nas listas correspondentes se foram \
+efetivamente ditos como decisao/acao, nao inferidos por voce."""
+
+MEETING_TOOL_SCHEMA = {
+    "name": "structure_meeting_capture",
+    "description": "Estrutura a transcricao de uma reuniao/aula em resumo, decisoes e acoes.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "title": {"type": "string", "description": "Titulo curto da reuniao/aula (ate 80 caracteres)."},
+            "summary": {"type": "string", "description": "Resumo fiel do que foi discutido, 3 a 6 frases."},
+            "decisions": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Decisoes explicitamente tomadas. Vazio se nenhuma.",
+            },
+            "action_items": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Itens de acao explicitamente combinados. Vazio se nenhum.",
+            },
+            "participants_mentioned": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Nomes de participantes citados no audio. Vazio se nenhum foi citado.",
+            },
+            "open_questions": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Perguntas levantadas e nao respondidas na reuniao.",
+            },
+            "confidence": {"type": "string", "enum": CONFIDENCE_LEVELS},
+            "uncertainty_notes": {"type": "string", "description": "String vazia se nao houver ambiguidade."},
+        },
+        "required": [
+            "title",
+            "summary",
+            "decisions",
+            "action_items",
+            "participants_mentioned",
+            "open_questions",
+            "confidence",
+            "uncertainty_notes",
+        ],
+    },
+}
+
+
+@dataclass
+class ProcessedMeeting:
+    title: str
+    summary: str
+    decisions: list[str] = field(default_factory=list)
+    action_items: list[str] = field(default_factory=list)
+    participants_mentioned: list[str] = field(default_factory=list)
+    open_questions: list[str] = field(default_factory=list)
+    confidence: str = "baixa"
+    uncertainty_notes: str = ""
+
+
+def process_meeting_transcript(labeled_text: str, api_key: str, model: str) -> ProcessedMeeting:
+    data = call_structured_tool(
+        system_prompt=MEETING_SYSTEM_PROMPT,
+        tool_schema=MEETING_TOOL_SCHEMA,
+        user_content=f"Transcricao da reuniao/aula:\n\n{labeled_text}",
+        api_key=api_key,
+        model=model,
+    )
+    return ProcessedMeeting(
+        title=data["title"],
+        summary=data["summary"],
+        decisions=data.get("decisions", []),
+        action_items=data.get("action_items", []),
+        participants_mentioned=data.get("participants_mentioned", []),
+        open_questions=data.get("open_questions", []),
+        confidence=data.get("confidence", "baixa"),
+        uncertainty_notes=data.get("uncertainty_notes", ""),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Terapia
+# ---------------------------------------------------------------------------
+
+THERAPY_SYSTEM_PROMPT = f"""\
+Voce processa a transcricao de uma sessao de terapia, ja dividida em duas \
+trilhas: o que a cliente disse (microfone) e o que o(a) terapeuta disse \
+(audio do sistema). O texto de entrada ja vem rotulado indicando qual \
+trecho e de qual trilha.
+
+{COMMON_RULES}
+- Voce NAO diagnostica, NAO interpreta psicologicamente e NAO da opiniao \
+clinica. Apenas organiza o que foi dito.
+- "insights" sao percepcoes que a propria cliente expressou durante a \
+sessao (ex: "percebi que..."), nunca uma interpretacao sua do que ela \
+"realmente" quis dizer."""
+
+THERAPY_TOOL_SCHEMA = {
+    "name": "structure_therapy_capture",
+    "description": "Estrutura a transcricao de uma sessao de terapia em sintese, temas e encaminhamentos, sem interpretacao clinica.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "title": {"type": "string", "description": "Titulo curto da sessao (ate 80 caracteres), ex: tema central."},
+            "session_summary": {
+                "type": "string",
+                "description": "Sintese fiel do que foi conversado, 3 a 6 frases, sem interpretacao clinica.",
+            },
+            "themes": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Temas abordados na sessao, citados explicitamente.",
+            },
+            "insights": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Percepcoes que a propria cliente expressou durante a sessao. Vazio se nenhuma.",
+            },
+            "follow_ups": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Encaminhamentos ou tarefas combinadas explicitamente na sessao. Vazio se nenhum.",
+            },
+            "confidence": {"type": "string", "enum": CONFIDENCE_LEVELS},
+            "uncertainty_notes": {"type": "string", "description": "String vazia se nao houver ambiguidade."},
+        },
+        "required": [
+            "title",
+            "session_summary",
+            "themes",
+            "insights",
+            "follow_ups",
+            "confidence",
+            "uncertainty_notes",
+        ],
+    },
+}
+
+
+@dataclass
+class ProcessedTherapy:
+    title: str
+    session_summary: str
+    themes: list[str] = field(default_factory=list)
+    insights: list[str] = field(default_factory=list)
+    follow_ups: list[str] = field(default_factory=list)
+    confidence: str = "baixa"
+    uncertainty_notes: str = ""
+
+
+def process_therapy_transcript(labeled_text: str, api_key: str, model: str) -> ProcessedTherapy:
+    data = call_structured_tool(
+        system_prompt=THERAPY_SYSTEM_PROMPT,
+        tool_schema=THERAPY_TOOL_SCHEMA,
+        user_content=f"Transcricao da sessao:\n\n{labeled_text}",
+        api_key=api_key,
+        model=model,
+    )
+    return ProcessedTherapy(
+        title=data["title"],
+        session_summary=data["session_summary"],
+        themes=data.get("themes", []),
+        insights=data.get("insights", []),
+        follow_ups=data.get("follow_ups", []),
+        confidence=data.get("confidence", "baixa"),
+        uncertainty_notes=data.get("uncertainty_notes", ""),
+    )

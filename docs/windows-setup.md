@@ -41,6 +41,16 @@ whisper_model: "small"
 whisper_language: "pt"
 anthropic_model: "claude-sonnet-5"
 audio_retention_days: 30
+
+# Opcional: só necessário se for usar a captura por atalho no desktop
+# (ver seção 6). Sem esta seção, os valores abaixo (padrão) são usados.
+desktop:
+  vault_meeting_dir: "C:\\Users\\Hellena\\ObsidianVault\\Inbox\\Reuniões"
+  vault_therapy_dir: "C:\\Users\\Hellena\\ObsidianVault\\Inbox\\Terapia"
+  hotkeys:
+    idea: "ctrl+alt+i"
+    meeting: "ctrl+alt+r"
+    therapy: "ctrl+alt+t"
 ```
 
 Edite `.env` com sua chave da Claude API (crie em
@@ -90,7 +100,43 @@ rodar o pipeline a cada 15 minutos:
 A partir daqui: grave no celular, espere alguns minutos, abra o Obsidian. Não
 precisa fazer mais nada.
 
-## 6. Comandos úteis
+## 6. Captura no desktop (substitui o Superwhisper)
+
+Ver a decisão de arquitetura completa em `docs/desktop-capture.md`. Passos de
+instalação:
+
+```powershell
+pip install -e .[desktop]
+```
+
+Confirme os atalhos e pastas em `config.yaml` (seção `desktop`, exemplo acima)
+e teste rodando o listener em primeiro plano, num terminal:
+
+```powershell
+python -m voice_capture.listener
+```
+
+Aperte `Ctrl+Alt+I` (modo ideia), fale, aperte de novo — deve aparecer uma
+notificação "Gravando..." e depois "Captura concluída". Teste também `Ctrl+
+Alt+R` (reunião) com algum áudio tocando no computador (ex: um vídeo), para
+confirmar que a trilha de sistema está sendo capturada.
+
+Depois de validar, registre o listener para iniciar com o Windows:
+
+1. Crie um arquivo `iniciar_listener.vbs` (evita abrir uma janela de console)
+   com este conteúdo, ajustando o caminho:
+   ```vbscript
+   Set WshShell = CreateObject("WScript.Shell")
+   WshShell.Run "caminho\para\hellena-capturas\.venv\Scripts\pythonw.exe -m voice_capture.listener", 0
+   ```
+2. Pressione `Win+R`, digite `shell:startup` e Enter — abre a pasta
+   Inicializar do seu usuário.
+3. Copie um atalho para `iniciar_listener.vbs` dentro dessa pasta.
+
+A partir do próximo login, os três atalhos ficam ativos automaticamente, sem
+precisar abrir nada.
+
+## 7. Comandos úteis
 
 ```powershell
 # Reprocessar um item específico (ex: depois de ajustar o prompt de IA)

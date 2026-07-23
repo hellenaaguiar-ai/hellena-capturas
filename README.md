@@ -1,16 +1,19 @@
 # Hellena Capturas
 
-Ferramenta pessoal de captura de pensamentos por voz: aperta um botão no
-iPhone, fala, solta — e a gravação chega sozinha, transcrita e estruturada, no
-seu vault do Obsidian.
+Ferramenta pessoal de captura de pensamentos por voz — no celular e no
+computador — com processamento automático e chegada final no seu vault do
+Obsidian.
 
-Não é um produto, não é um SaaS. É um script que roda no seu computador.
+Não é um produto, não é um SaaS. São dois scripts que rodam no seu computador.
 
-Leia primeiro **[ARCHITECTURE.md](ARCHITECTURE.md)** para o diagnóstico
-completo, a comparação de alternativas e as decisões de arquitetura. Este
-README é só o "como instalar e usar".
+Leia primeiro **[ARCHITECTURE.md](ARCHITECTURE.md)** (pipeline mobile) e
+**[docs/desktop-capture.md](docs/desktop-capture.md)** (captura no desktop
+com atalho de teclado) para o diagnóstico completo e as decisões de
+arquitetura. Este README é só o "como instalar e usar".
 
-## Como funciona, resumido
+## Dois fluxos
+
+**Mobile** — aperta o Botão de Ação no iPhone, fala, solta:
 
 ```
 iPhone (Atalho + Botão de Ação)
@@ -20,36 +23,55 @@ iPhone (Atalho + Botão de Ação)
         → Markdown escrito no vault do Obsidian
 ```
 
+**Desktop** — substitui o Superwhisper: atalho de teclado global com 3
+modos (ideia, reunião/aula, terapia), gravando microfone e, quando o modo
+pede, também o áudio do sistema (para separar "você" de "outra pessoa" sem
+diarização):
+
+```
+Ctrl+Alt+I / Ctrl+Alt+R / Ctrl+Alt+T
+  → grava mic (+ áudio do sistema se o modo pedir)
+    → Whisper local transcreve cada trilha
+      → Claude API estrutura conforme o modo (ideia / reunião / terapia)
+        → Markdown escrito no vault do Obsidian
+```
+
 Detalhes de privacidade — o que sai da sua máquina e para onde — estão na
-seção 12 de [ARCHITECTURE.md](ARCHITECTURE.md).
+seção 12 de [ARCHITECTURE.md](ARCHITECTURE.md) (vale para os dois fluxos: só
+texto trafega para a Claude API, áudio nunca sai da máquina).
 
 ## Instalação
 
 1. **No iPhone:** siga [docs/ios-shortcut-setup.md](docs/ios-shortcut-setup.md)
    para criar o Atalho de captura.
 2. **No Windows:** siga [docs/windows-setup.md](docs/windows-setup.md) para
-   instalar o pipeline e agendar sua execução automática.
+   instalar o pipeline mobile (seções 1–5), agendar sua execução automática,
+   e opcionalmente a captura no desktop (seção 6).
 
 ## Uso do dia a dia
 
-Depois de instalado, o uso é só:
+**Mobile:** aperte o Botão de Ação (ou o widget na tela bloqueada), fale,
+aperte de novo para parar, volte ao que estava fazendo. A nota aparece no
+Obsidian em até ~15 minutos, sozinha.
 
-1. Aperte o Botão de Ação (ou o widget na tela bloqueada).
-2. Fale.
-3. Aperte de novo para parar.
-4. Volte ao que estava fazendo.
+**Desktop:** aperte `Ctrl+Alt+I`/`R`/`T` conforme o modo, fale, aperte de
+novo para parar. Uma notificação confirma quando a nota estiver pronta.
 
-A nota aparece no Obsidian em até ~15 minutos, sozinha. Se algo falhar, você
-vai ver uma nota `_Erros de captura.md` no vault explicando o que houve — a
-captura nunca falha em silêncio.
+Se algo falhar, em qualquer um dos dois fluxos, você vai ver uma nota
+`_Erros de captura.md` no vault explicando o que houve — a captura nunca
+falha em silêncio.
 
 ## Comandos
 
 ```powershell
+# Pipeline mobile (roda em lote, disparado pelo Task Scheduler)
 python -m voice_capture.run                    # processa o que estiver pendente
 python -m voice_capture.run --status            # mostra o estado de cada item
 python -m voice_capture.run --reprocess <hash>  # reprocessa um item específico
 python -m voice_capture.cleanup                 # apaga áudio antigo já processado
+
+# Captura no desktop (roda continuamente, ouvindo os atalhos)
+python -m voice_capture.listener
 ```
 
 ## Testando o caminho completo

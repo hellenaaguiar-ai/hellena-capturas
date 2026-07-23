@@ -3,3 +3,9 @@ anthropic>=0.40.0
 PyYAML>=6.0
 python-dotenv>=1.0.0
 pytest>=8.0.0
+
+# Captura no desktop (atalho global + audio mic/sistema) - Windows
+soundcard>=0.4.3; sys_platform == "win32"
+keyboard>=0.13.5; sys_platform == "win32"
+plyer>=2.1.0; sys_platform == "win32"
+numpy>=1.24
