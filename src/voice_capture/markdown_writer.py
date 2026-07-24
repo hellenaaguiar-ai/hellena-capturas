@@ -14,11 +14,22 @@ from .process_ai import POSSIBLE_USES, ProcessedCapture
 CONFIDENCE_DISPLAY = {"baixa": "baixa", "media": "média", "alta": "alta"}
 
 
-def slugify(text: str, max_len: int = 60) -> str:
+def slugify(text: str, max_len: int = 40) -> str:
+    """Gera um slug curto para nome de arquivo, sempre cortando em palavra
+    inteira (nunca no meio de uma palavra)."""
     normalized = unicodedata.normalize("NFKD", text)
     ascii_text = normalized.encode("ascii", "ignore").decode("ascii")
-    slug = re.sub(r"[^a-zA-Z0-9]+", "-", ascii_text).strip("-").lower()
-    return slug[:max_len].rstrip("-") or "captura"
+    words = re.sub(r"[^a-zA-Z0-9]+", "-", ascii_text).strip("-").lower().split("-")
+
+    slug = ""
+    for word in words:
+        if not word:
+            continue
+        candidate = f"{slug}-{word}" if slug else word
+        if len(candidate) > max_len:
+            break
+        slug = candidate
+    return slug or "captura"
 
 
 def _yaml_list(items: list[str]) -> str:
