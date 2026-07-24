@@ -74,6 +74,17 @@ def _process_in_background(config: Config, mode: CaptureMode, mic_path: Path, sy
             _notify("Falha na captura", f"{mode.label} falhou — veja _Erros de captura.md no vault.")
 
 
+def _safe_toggle(config: Config, mode: CaptureMode) -> None:
+    """Wrapper de seguranca: garante que qualquer excecao dentro do callback
+    do atalho apareca no log, em vez de ser engolida silenciosamente pela
+    thread interna da biblioteca `keyboard`."""
+    logging.info("Atalho do modo '%s' acionado.", mode.label)
+    try:
+        _toggle(config, mode)
+    except Exception:
+        logging.exception("Erro inesperado ao processar o atalho do modo '%s'.", mode.key)
+
+
 def _toggle(config: Config, mode: CaptureMode) -> None:
     if mode.key in _active_sessions:
         session, recorded_at = _active_sessions.pop(mode.key)
@@ -115,7 +126,7 @@ def main() -> None:
 
     active_modes = modes_module.build_modes(config)
     for mode in active_modes:
-        keyboard.add_hotkey(mode.hotkey, lambda m=mode: _toggle(config, m))
+        keyboard.add_hotkey(mode.hotkey, lambda m=mode: _safe_toggle(config, m))
         logging.info("Modo '%s' registrado em %s -> %s", mode.label, mode.hotkey, mode.vault_dir)
 
     logging.info("Listener ativo. Pressione Ctrl+C no terminal para encerrar.")
