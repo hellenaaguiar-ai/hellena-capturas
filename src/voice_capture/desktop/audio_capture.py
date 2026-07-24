@@ -8,6 +8,7 @@ testavel sem hardware de audio.
 """
 from __future__ import annotations
 
+import contextlib
 import threading
 import wave
 from dataclasses import dataclass
@@ -17,6 +18,24 @@ from typing import Optional
 SAMPLE_RATE = 48000
 CHANNELS = 1
 CHUNK_FRAMES = SAMPLE_RATE // 10  # 100ms por leitura, mantem o stop responsivo
+
+COINIT_MULTITHREADED = 0x0
+
+
+@contextlib.contextmanager
+def _com_initialized():
+    """O soundcard usa COM (API do Windows) para enumerar dispositivos de
+    audio. COM precisa ser inicializado em cada thread que o usa - threads
+    criadas por threading.Thread nao tem isso feito automaticamente, o que
+    causa RuntimeError: Error 0x800401f0 (CO_E_NOTINITIALIZED) sem isso."""
+    import ctypes
+
+    ole32 = ctypes.windll.ole32
+    ole32.CoInitializeEx(None, COINIT_MULTITHREADED)
+    try:
+        yield
+    finally:
+        ole32.CoUninitialize()
 
 
 class RecordingSession:
@@ -40,27 +59,29 @@ class RecordingSession:
             t.start()
 
     def _run_mic(self) -> None:
-        try:
-            import soundcard as sc
+        with _com_initialized():
+            try:
+                import soundcard as sc
 
-            mic = sc.default_microphone()
-            with mic.recorder(samplerate=SAMPLE_RATE, channels=CHANNELS) as recorder:
-                while not self._stop_event.is_set():
-                    self._mic_frames.append(recorder.record(numframes=CHUNK_FRAMES))
-        except Exception as exc:  # noqa: BLE001
-            self._error = exc
+                mic = sc.default_microphone()
+                with mic.recorder(samplerate=SAMPLE_RATE, channels=CHANNELS) as recorder:
+                    while not self._stop_event.is_set():
+                        self._mic_frames.append(recorder.record(numframes=CHUNK_FRAMES))
+            except Exception as exc:  # noqa: BLE001
+                self._error = exc
 
     def _run_system(self) -> None:
-        try:
-            import soundcard as sc
+        with _com_initialized():
+            try:
+                import soundcard as sc
 
-            speaker = sc.default_speaker()
-            loopback = sc.get_microphone(id=str(speaker.name), include_loopback=True)
-            with loopback.recorder(samplerate=SAMPLE_RATE, channels=CHANNELS) as recorder:
-                while not self._stop_event.is_set():
-                    self._system_frames.append(recorder.record(numframes=CHUNK_FRAMES))
-        except Exception as exc:  # noqa: BLE001
-            self._error = exc
+                speaker = sc.default_speaker()
+                loopback = sc.get_microphone(id=str(speaker.name), include_loopback=True)
+                with loopback.recorder(samplerate=SAMPLE_RATE, channels=CHANNELS) as recorder:
+                    while not self._stop_event.is_set():
+                        self._system_frames.append(recorder.record(numframes=CHUNK_FRAMES))
+            except Exception as exc:  # noqa: BLE001
+                self._error = exc
 
     def stop(self) -> tuple[Path, Optional[Path]]:
         self._stop_event.set()
