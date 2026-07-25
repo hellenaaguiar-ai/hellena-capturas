@@ -22,6 +22,7 @@ from . import pipeline
 from .config import Config, load_config
 from .desktop import modes as modes_module
 from .desktop.audio_capture import RecordingSession, start_capture
+from .desktop.indicator import RecordingIndicator
 from .desktop.modes import CaptureMode, NOTE_TYPE_IDEA
 from .desktop_pipeline import process_desktop_recording
 from .errors_note import write_errors_note
@@ -29,7 +30,7 @@ from .run import setup_logging
 from .state import StateStore
 
 _pipeline_lock = threading.Lock()
-_active_sessions: dict[str, tuple[RecordingSession, datetime]] = {}
+_active_sessions: dict[str, tuple[RecordingSession, datetime, RecordingIndicator]] = {}
 
 
 def _notify(title: str, message: str) -> None:
@@ -87,7 +88,8 @@ def _safe_toggle(config: Config, mode: CaptureMode) -> None:
 
 def _toggle(config: Config, mode: CaptureMode) -> None:
     if mode.key in _active_sessions:
-        session, recorded_at = _active_sessions.pop(mode.key)
+        session, recorded_at, indicator = _active_sessions.pop(mode.key)
+        indicator.stop()
         try:
             mic_path, system_path = session.stop()
         except Exception as exc:  # noqa: BLE001
@@ -113,7 +115,9 @@ def _toggle(config: Config, mode: CaptureMode) -> None:
         _notify("Erro ao gravar", f"{mode.label}: {exc}")
         return
 
-    _active_sessions[mode.key] = (session, datetime.now().astimezone())
+    indicator = RecordingIndicator(f"🔴 Gravando — {mode.label}")
+    indicator.start()
+    _active_sessions[mode.key] = (session, datetime.now().astimezone(), indicator)
     _notify("Gravando...", f"{mode.label} — aperte {mode.hotkey} de novo para parar.")
 
 

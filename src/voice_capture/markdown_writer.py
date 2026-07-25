@@ -4,7 +4,6 @@ from __future__ import annotations
 import os
 import re
 import tempfile
-import unicodedata
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -15,21 +14,20 @@ CONFIDENCE_DISPLAY = {"baixa": "baixa", "media": "média", "alta": "alta"}
 
 
 def slugify(text: str, max_len: int = 40) -> str:
-    """Gera um slug curto para nome de arquivo, sempre cortando em palavra
-    inteira (nunca no meio de uma palavra)."""
-    normalized = unicodedata.normalize("NFKD", text)
-    ascii_text = normalized.encode("ascii", "ignore").decode("ascii")
-    words = re.sub(r"[^a-zA-Z0-9]+", "-", ascii_text).strip("-").lower().split("-")
+    """Limpa o titulo para uso em nome de arquivo: remove pontuacao e
+    caracteres invalidos no Windows, mas mantem espacos, acentos e a
+    capitalizacao original (palavras separadas por espaco, nunca hifen).
+    Corta sempre em palavra inteira, nunca no meio de uma palavra."""
+    cleaned = re.sub(r"[^\w\s]", " ", text, flags=re.UNICODE)
+    words = cleaned.split()
 
-    slug = ""
+    result = ""
     for word in words:
-        if not word:
-            continue
-        candidate = f"{slug}-{word}" if slug else word
+        candidate = f"{result} {word}" if result else word
         if len(candidate) > max_len:
             break
-        slug = candidate
-    return slug or "captura"
+        result = candidate
+    return result or "Captura"
 
 
 def _yaml_list(items: list[str]) -> str:

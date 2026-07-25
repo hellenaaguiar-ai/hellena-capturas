@@ -22,6 +22,15 @@ CHUNK_FRAMES = SAMPLE_RATE // 10  # 100ms por leitura, mantem o stop responsivo
 COINIT_MULTITHREADED = 0x0
 
 
+def _silence_soundcard_warnings() -> None:
+    """Avisos de "data discontinuity in recording" sao esperados em gravacoes
+    curtas de nota de voz (pequenas falhas momentaneas de buffer) e nao
+    indicam perda real de conteudo relevante - so poluem o terminal."""
+    import warnings
+
+    warnings.filterwarnings("ignore", message="data discontinuity in recording")
+
+
 @contextlib.contextmanager
 def _com_initialized():
     """O soundcard usa COM (API do Windows) para enumerar dispositivos de
@@ -63,6 +72,7 @@ class RecordingSession:
             try:
                 import soundcard as sc
 
+                _silence_soundcard_warnings()
                 mic = sc.default_microphone()
                 with mic.recorder(samplerate=SAMPLE_RATE, channels=CHANNELS) as recorder:
                     while not self._stop_event.is_set():
@@ -75,6 +85,7 @@ class RecordingSession:
             try:
                 import soundcard as sc
 
+                _silence_soundcard_warnings()
                 speaker = sc.default_speaker()
                 loopback = sc.get_microphone(id=str(speaker.name), include_loopback=True)
                 with loopback.recorder(samplerate=SAMPLE_RATE, channels=CHANNELS) as recorder:

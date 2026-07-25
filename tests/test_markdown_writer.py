@@ -33,13 +33,24 @@ def make_meta():
     )
 
 
-def test_slugify_strips_accents_and_symbols():
-    assert slugify("Vigilância é cuidado?!") == "vigilancia-e-cuidado"
+def test_slugify_removes_punctuation_keeps_spaces_and_accents():
+    assert slugify("Vigilância é cuidado?!") == "Vigilância é cuidado"
+
+
+def test_slugify_never_uses_hyphens():
+    assert "-" not in slugify("Uma reflexão sobre livros e trauma")
+
+
+def test_slugify_cuts_on_word_boundary():
+    long_title = "Romances personagens que se exercitam apos trauma e minha interpretacao"
+    result = slugify(long_title, max_len=40)
+    assert len(result) <= 40
+    assert all(word in long_title.split() for word in result.split())
 
 
 def test_build_filename_uses_recorded_at_and_slug():
     filename = build_filename(datetime(2026, 7, 23, 22, 14), "Vigilância romantizada")
-    assert filename == "2026-07-23 2214 - vigilancia-romantizada.md"
+    assert filename == "2026-07-23 2214 - Vigilância romantizada.md"
 
 
 def test_build_markdown_contains_frontmatter_and_sections():
