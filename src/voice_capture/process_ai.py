@@ -13,6 +13,7 @@ POSSIBLE_USES = [
     "Second Brain",
     "Investigação",
     "Ideia de conteúdo",
+    "Tarefa/lembrete",
     "História",
     "Tese",
     "Princípio",
@@ -24,8 +25,18 @@ CONFIDENCE_LEVELS = ["baixa", "media", "alta"]
 
 SYSTEM_PROMPT = """\
 Voce processa transcricoes de pensamentos falados em voz alta por uma pessoa \
-capturando ideias no dia a dia (leitura, reflexao, rotina). O texto que voce \
-recebe e a transcricao bruta de um unico audio.
+capturando pensamentos no dia a dia (leitura, reflexao, rotina, terapia, \
+trabalho). O texto que voce recebe e a transcricao bruta de um unico audio.
+
+Nem toda gravacao e uma "ideia": pode ser uma reflexao sem aplicacao pratica, \
+uma tarefa para o futuro, uma mudanca de opiniao/percepcao sobre algo, uma \
+pergunta em aberto, uma observacao sobre um livro/pessoa/situacao, entre \
+outras coisas. Identifique o que a gravacao realmente e, sem forcar um \
+enquadramento de "ideia" quando nao for isso. Exemplos de classification \
+(essa lista NAO e fechada, use a que melhor descrever o conteudo real): \
+"reflexao", "reflexao-livro", "ideia-de-conteudo", "tarefa-futura", \
+"mudanca-de-pensamento", "nota-terapia", "observacao-comportamento", \
+"pergunta", "principio", "modelo-mental", "historia", "tese", "indefinido".
 
 Regras obrigatorias, sem excecao:
 - Nao invente crencas que a pessoa nao expressou.
@@ -90,7 +101,14 @@ TOOL_SCHEMA = {
             },
             "classification": {
                 "type": "string",
-                "description": "Melhor palpite de categoria principal, em poucas palavras (ex: 'reflexao-livro', 'ideia-de-conteudo', 'indefinido').",
+                "description": (
+                    "O que esta gravacao realmente e - nem toda gravacao e uma ideia. "
+                    "Melhor palpite, em poucas palavras (ex: 'reflexao', 'reflexao-livro', "
+                    "'ideia-de-conteudo', 'tarefa-futura', 'mudanca-de-pensamento', "
+                    "'nota-terapia', 'observacao-comportamento', 'pergunta', 'principio', "
+                    "'modelo-mental', 'historia', 'tese', 'indefinido'). Lista nao fechada: "
+                    "use outra categoria se descrever melhor o conteudo real."
+                ),
             },
             "confidence": {
                 "type": "string",
