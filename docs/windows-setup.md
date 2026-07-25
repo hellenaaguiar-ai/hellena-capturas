@@ -117,9 +117,15 @@ python -m voice_capture.listener
 ```
 
 Aperte `Ctrl+Alt+I` (modo ideia), fale, aperte de novo — deve aparecer uma
-notificação "Gravando..." e depois "Captura concluída". Teste também `Ctrl+
-Alt+R` (reunião) com algum áudio tocando no computador (ex: um vídeo), para
-confirmar que a trilha de sistema está sendo capturada.
+janelinha vermelha no canto da tela enquanto grava, e uma notificação
+"Captura concluída" ao terminar. Teste também `Ctrl+Alt+R` (reunião) com
+algum áudio tocando no computador (ex: um vídeo), para confirmar que a
+trilha de sistema está sendo capturada.
+
+Um ícone azul aparece na bandeja do sistema (perto do relógio) assim que o
+listener inicia — fica vermelho enquanto uma gravação está em andamento.
+Clique com o botão direito nele e escolha **"Sair"** para encerrar o
+programa (não precisa mais fechar pelo terminal).
 
 Depois de validar, registre o listener para iniciar com o Windows:
 

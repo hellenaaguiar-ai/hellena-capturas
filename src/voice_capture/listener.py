@@ -24,6 +24,7 @@ from .desktop import modes as modes_module
 from .desktop.audio_capture import RecordingSession, start_capture
 from .desktop.indicator import RecordingIndicator
 from .desktop.modes import CaptureMode, NOTE_TYPE_IDEA
+from .desktop.tray import TrayIcon
 from .desktop_pipeline import process_desktop_recording
 from .errors_note import write_errors_note
 from .run import setup_logging
@@ -31,6 +32,12 @@ from .state import StateStore
 
 _pipeline_lock = threading.Lock()
 _active_sessions: dict[str, tuple[RecordingSession, datetime, RecordingIndicator]] = {}
+_tray_icon: Optional[TrayIcon] = None
+
+
+def _update_tray_state() -> None:
+    if _tray_icon is not None:
+        _tray_icon.set_recording(bool(_active_sessions))
 
 
 def _notify(title: str, message: str) -> None:
@@ -90,6 +97,7 @@ def _toggle(config: Config, mode: CaptureMode) -> None:
     if mode.key in _active_sessions:
         session, recorded_at, indicator = _active_sessions.pop(mode.key)
         indicator.stop()
+        _update_tray_state()
         try:
             mic_path, system_path = session.stop()
         except Exception as exc:  # noqa: BLE001
@@ -118,10 +126,13 @@ def _toggle(config: Config, mode: CaptureMode) -> None:
     indicator = RecordingIndicator(f"🔴 Gravando — {mode.label}")
     indicator.start()
     _active_sessions[mode.key] = (session, datetime.now().astimezone(), indicator)
+    _update_tray_state()
     _notify("Gravando...", f"{mode.label} — aperte {mode.hotkey} de novo para parar.")
 
 
 def main() -> None:
+    global _tray_icon
+
     config = load_config()
     config.ensure_dirs()
     setup_logging(config)
@@ -142,8 +153,16 @@ def main() -> None:
         keyboard.add_hotkey(mode.hotkey, lambda m=mode: _safe_toggle(config, m))
         logging.info("Modo '%s' registrado em %s -> %s", mode.label, mode.hotkey, mode.vault_dir)
 
-    logging.info("Listener ativo. Pressione Ctrl+C no terminal para encerrar.")
-    keyboard.wait()
+    logging.info("Listener ativo. Use o icone na bandeja do sistema para encerrar.")
+
+    # keyboard.wait() bloqueia para sempre - roda em segundo plano para o
+    # icone da bandeja poder ocupar a thread principal (necessario para
+    # funcionar de forma confiavel).
+    threading.Thread(target=keyboard.wait, daemon=True).start()
+
+    _tray_icon = TrayIcon()
+    _tray_icon.run()  # bloqueia ate clicar em "Sair" no menu do icone
+    logging.info("Encerrado pelo icone da bandeja.")
 
 
 if __name__ == "__main__":
