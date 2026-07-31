@@ -19,7 +19,7 @@ from .hashing import sha256_file
 from .pipeline import process_item
 from .state import StateStore
 
-AUDIO_EXTENSIONS = {".m4a", ".mp3", ".wav", ".caf", ".aac"}
+AUDIO_EXTENSIONS = {".m4a", ".mp3", ".wav", ".caf", ".aac", ".mp4"}
 STABILITY_CHECK_SECONDS = 2
 
 
