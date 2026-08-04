@@ -8,3 +8,8 @@ config.yaml
 
 data/
 *.egg-info/
+
+# Conteúdo pessoal/sensível gerado ad-hoc (ex.: notas de terapia estruturadas
+# manualmente) nunca deve entrar no histórico do git — é entregue direto
+# via arquivo, não versionado.
+scratchpad-terapia/
