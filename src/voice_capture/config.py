@@ -10,7 +10,12 @@ from dotenv import load_dotenv
 
 DEFAULT_CONFIG_PATH = Path("config.yaml")
 
-DEFAULT_HOTKEYS = {"idea": "ctrl+alt+i", "meeting": "ctrl+alt+r", "therapy": "ctrl+alt+t"}
+DEFAULT_HOTKEYS = {
+    "idea": "ctrl+alt+i",
+    "meeting": "ctrl+alt+r",
+    "therapy": "ctrl+alt+t",
+    "stop": "ctrl+alt+p",
+}
 
 
 @dataclass(frozen=True)

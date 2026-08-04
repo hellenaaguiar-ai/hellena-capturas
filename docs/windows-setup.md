@@ -51,6 +51,7 @@ desktop:
     idea: "ctrl+alt+i"
     meeting: "ctrl+alt+r"
     therapy: "ctrl+alt+t"
+    stop: "ctrl+alt+p"
 ```
 
 Edite `.env` com sua chave da Claude API (crie em

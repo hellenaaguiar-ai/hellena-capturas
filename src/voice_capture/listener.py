@@ -93,25 +93,58 @@ def _safe_toggle(config: Config, mode: CaptureMode) -> None:
         logging.exception("Erro inesperado ao processar o atalho do modo '%s'.", mode.key)
 
 
+def _stop_mode(config: Config, mode: CaptureMode) -> None:
+    """Encerra a gravacao ativa do modo indicado e dispara o processamento
+    em segundo plano. Assume que mode.key esta em _active_sessions."""
+    session, recorded_at, indicator = _active_sessions.pop(mode.key)
+    indicator.stop()
+    _update_tray_state()
+    try:
+        mic_path, system_path = session.stop()
+    except Exception as exc:  # noqa: BLE001
+        logging.exception("Falha ao parar gravacao do modo %s", mode.key)
+        _notify("Erro na gravação", f"{mode.label}: {exc}")
+        return
+
+    _notify("Processando...", f"{mode.label} — transcrevendo e estruturando.")
+    thread = threading.Thread(
+        target=_process_in_background,
+        args=(config, mode, mic_path, system_path, recorded_at),
+        daemon=True,
+    )
+    thread.start()
+
+
+def _safe_stop_any(config: Config) -> None:
+    """Wrapper de seguranca do atalho global de 'parar' (equivalente ao
+    _safe_toggle dos outros modos)."""
+    logging.info("Atalho de 'Parar' acionado.")
+    try:
+        _stop_any(config)
+    except Exception:
+        logging.exception("Erro inesperado ao processar o atalho de 'Parar'.")
+
+
+def _stop_any(config: Config) -> None:
+    """Encerra qualquer gravacao em andamento, seja ela qual modo for - pra
+    quem nao lembra em qual dos tres icones/atalhos comecou a gravar.
+    Sem efeito se nada estiver gravando."""
+    if not _active_sessions:
+        _notify("Nada gravando", "Nenhuma gravação em andamento no momento.")
+        return
+
+    active_modes = modes_module.build_modes(config)
+    modes_by_key = {m.key: m for m in active_modes}
+    for mode_key in list(_active_sessions.keys()):
+        mode = modes_by_key.get(mode_key)
+        if mode is None:
+            continue
+        _stop_mode(config, mode)
+
+
 def _toggle(config: Config, mode: CaptureMode) -> None:
     if mode.key in _active_sessions:
-        session, recorded_at, indicator = _active_sessions.pop(mode.key)
-        indicator.stop()
-        _update_tray_state()
-        try:
-            mic_path, system_path = session.stop()
-        except Exception as exc:  # noqa: BLE001
-            logging.exception("Falha ao parar gravacao do modo %s", mode.key)
-            _notify("Erro na gravação", f"{mode.label}: {exc}")
-            return
-
-        _notify("Processando...", f"{mode.label} — transcrevendo e estruturando.")
-        thread = threading.Thread(
-            target=_process_in_background,
-            args=(config, mode, mic_path, system_path, recorded_at),
-            daemon=True,
-        )
-        thread.start()
+        _stop_mode(config, mode)
         return
 
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -127,7 +160,10 @@ def _toggle(config: Config, mode: CaptureMode) -> None:
     indicator.start()
     _active_sessions[mode.key] = (session, datetime.now().astimezone(), indicator)
     _update_tray_state()
-    _notify("Gravando...", f"{mode.label} — aperte {mode.hotkey} de novo para parar.")
+    _notify(
+        "Gravando...",
+        f"{mode.label} — aperte {mode.hotkey} de novo (ou {config.hotkeys['stop']}) para parar.",
+    )
 
 
 def main() -> None:
@@ -152,6 +188,10 @@ def main() -> None:
     for mode in active_modes:
         keyboard.add_hotkey(mode.hotkey, lambda m=mode: _safe_toggle(config, m))
         logging.info("Modo '%s' registrado em %s -> %s", mode.label, mode.hotkey, mode.vault_dir)
+
+    stop_hotkey = config.hotkeys["stop"]
+    keyboard.add_hotkey(stop_hotkey, lambda: _safe_stop_any(config))
+    logging.info("Atalho 'Parar' (qualquer modo) registrado em %s", stop_hotkey)
 
     logging.info("Listener ativo. Use o icone na bandeja do sistema para encerrar.")
 

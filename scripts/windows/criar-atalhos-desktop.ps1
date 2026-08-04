@@ -16,7 +16,8 @@ $shell = New-Object -ComObject WScript.Shell
 $modes = @(
     @{ Nome = "Gravar Ideia";   Bat = "Gravar Ideia.bat";   Icone = "ideia.ico" },
     @{ Nome = "Gravar Reuniao"; Bat = "Gravar Reuniao.bat"; Icone = "reuniao.ico" },
-    @{ Nome = "Gravar Terapia"; Bat = "Gravar Terapia.bat"; Icone = "terapia.ico" }
+    @{ Nome = "Gravar Terapia"; Bat = "Gravar Terapia.bat"; Icone = "terapia.ico" },
+    @{ Nome = "Parar de Gravar"; Bat = "Parar de Gravar.bat"; Icone = "parar.ico" }
 )
 
 foreach ($modo in $modes) {
@@ -39,4 +40,4 @@ foreach ($modo in $modes) {
     Write-Host "Criado: $lnkPath"
 }
 
-Write-Host "`nPronto. Os 3 atalhos estao na Area de Trabalho, com icone proprio."
+Write-Host "`nPronto. Os 4 atalhos estao na Area de Trabalho, com icone proprio."

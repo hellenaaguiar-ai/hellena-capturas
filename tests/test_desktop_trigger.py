@@ -1,7 +1,7 @@
 import pytest
 
 from voice_capture.config import Config
-from voice_capture.desktop.trigger import trigger_mode
+from voice_capture.desktop.trigger import trigger_mode, trigger_stop
 
 
 def make_config(tmp_path) -> Config:
@@ -43,3 +43,13 @@ def test_trigger_mode_unknown_key_raises(tmp_path):
     config = make_config(tmp_path)
     with pytest.raises(ValueError):
         trigger_mode("nao-existe", config, send_keys=lambda k: None)
+
+
+def test_trigger_stop_sends_configured_hotkey(tmp_path):
+    config = make_config(tmp_path)
+    sent = []
+
+    hotkey = trigger_stop(config, send_keys=sent.append)
+
+    assert hotkey == config.hotkeys["stop"]
+    assert sent == [config.hotkeys["stop"]]

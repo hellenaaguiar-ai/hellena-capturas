@@ -23,10 +23,15 @@ Um hotkey diferente por modo (sem seletor no meio, sem clique extra):
 | Ideia | `Ctrl+Alt+I` | Não — só microfone |
 | Reunião/aula | `Ctrl+Alt+R` | Sim — microfone + o que toca no computador |
 | Terapia | `Ctrl+Alt+T` | Sim — microfone + o que toca no computador |
+| **Parar** (qualquer modo) | `Ctrl+Alt+P` | — |
 
 Apertar uma vez começa a gravar; apertar de novo (mesmo atalho) encerra —
-igual ao comportamento do Atalho no iPhone. Todos os três atalhos e seus
-nomes/pastas são configuráveis em `config.yaml`, sem precisar mexer em código.
+igual ao comportamento do Atalho no iPhone. Além disso existe um quarto
+atalho, **Parar**, que encerra qualquer gravação em andamento sem precisar
+lembrar qual dos três você usou para começar — útil se você apertou
+`Ctrl+Alt+R` mas não tem certeza, por exemplo. Se nada estiver gravando,
+apertar Parar não faz nada. Todos os quatro atalhos e os nomes/pastas dos
+três modos são configuráveis em `config.yaml`, sem precisar mexer em código.
 
 Considerei usar AutoHotkey (mais robusto historicamente para hotkeys no
 Windows) em vez da biblioteca Python `keyboard`, mas isso significaria
@@ -68,22 +73,24 @@ gravação anterior ainda está sendo processada.
 
 ### 3.1. Alternativa ao atalho de teclado: ícone no Desktop
 
-Quem preferir clicar em vez de decorar `Ctrl+Alt+I/R/T` pode usar os
+Quem preferir clicar em vez de decorar `Ctrl+Alt+I/R/T/P` pode usar os
 arquivos em `scripts/windows/` (`Gravar Ideia.bat`, `Gravar Reuniao.bat`,
-`Gravar Terapia.bat`). Um duplo clique simula o pressionamento do atalho
-correspondente contra o `listener` que já está rodando (não substitui o
-listener, só oferece outra forma de acioná-lo).
+`Gravar Terapia.bat`, `Parar de Gravar.bat`). Um duplo clique simula o
+pressionamento do atalho correspondente contra o `listener` que já está
+rodando (não substitui o listener, só oferece outra forma de acioná-lo).
+`Parar de Gravar` encerra a gravação em andamento independente de qual dos
+três modos a começou — não precisa saber em qual ícone você clicou antes.
 
 Copiar o `.bat` direto pra Área de Trabalho funciona, mas fica com o ícone
-genérico de arquivo `.bat` do Windows. Para ter um ícone próprio por modo
-(uma bolinha colorida com I/R/T, ver `assets/icons/`), rode uma vez, com
-PowerShell aberto na pasta do projeto:
+genérico de arquivo `.bat` do Windows. Para ter um ícone próprio por ação
+(bolinha colorida com I/R/T, e um quadrado vermelho para Parar — ver
+`assets/icons/`), rode uma vez, com PowerShell aberto na pasta do projeto:
 
 ```powershell
 .\scripts\windows\criar-atalhos-desktop.ps1
 ```
 
-Isso cria três atalhos de verdade (`.lnk`) na Área de Trabalho — não move
+Isso cria quatro atalhos de verdade (`.lnk`) na Área de Trabalho — não move
 nem duplica os `.bat`, só aponta pra eles com o ícone certo. Rodar de novo
 recria os atalhos (útil se você mudar o projeto de pasta). Se preferir
 fazer isso na mão em vez de rodar o script: clique direito no `.bat` →
