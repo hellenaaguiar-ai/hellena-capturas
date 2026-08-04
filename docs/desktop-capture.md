@@ -70,12 +70,26 @@ gravação anterior ainda está sendo processada.
 
 Quem preferir clicar em vez de decorar `Ctrl+Alt+I/R/T` pode usar os
 arquivos em `scripts/windows/` (`Gravar Ideia.bat`, `Gravar Reuniao.bat`,
-`Gravar Terapia.bat`). Copie o(s) que quiser direto para a Área de
-Trabalho — um duplo clique simula o pressionamento do atalho
+`Gravar Terapia.bat`). Um duplo clique simula o pressionamento do atalho
 correspondente contra o `listener` que já está rodando (não substitui o
-listener, só oferece outra forma de acioná-lo). Ajuste o caminho
-`C:\hellena-capturas` dentro do `.bat` se o projeto estiver em outro
-lugar.
+listener, só oferece outra forma de acioná-lo).
+
+Copiar o `.bat` direto pra Área de Trabalho funciona, mas fica com o ícone
+genérico de arquivo `.bat` do Windows. Para ter um ícone próprio por modo
+(uma bolinha colorida com I/R/T, ver `assets/icons/`), rode uma vez, com
+PowerShell aberto na pasta do projeto:
+
+```powershell
+.\scripts\windows\criar-atalhos-desktop.ps1
+```
+
+Isso cria três atalhos de verdade (`.lnk`) na Área de Trabalho — não move
+nem duplica os `.bat`, só aponta pra eles com o ícone certo. Rodar de novo
+recria os atalhos (útil se você mudar o projeto de pasta). Se preferir
+fazer isso na mão em vez de rodar o script: clique direito no `.bat` →
+"Criar atalho", mova o atalho pra Área de Trabalho, clique direito nele →
+Propriedades → "Alterar Ícone..." → aponte para o `.ico` correspondente em
+`assets\icons\`.
 
 ### 4. Destino das notas
 
