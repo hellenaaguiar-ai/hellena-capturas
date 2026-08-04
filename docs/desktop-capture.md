@@ -66,6 +66,17 @@ teclado e, quando aciona uma gravação, delega a transcrição/processamento
 pesado para uma thread separada — o hotkey continua responsivo enquanto uma
 gravação anterior ainda está sendo processada.
 
+### 3.1. Alternativa ao atalho de teclado: ícone no Desktop
+
+Quem preferir clicar em vez de decorar `Ctrl+Alt+I/R/T` pode usar os
+arquivos em `scripts/windows/` (`Gravar Ideia.bat`, `Gravar Reuniao.bat`,
+`Gravar Terapia.bat`). Copie o(s) que quiser direto para a Área de
+Trabalho — um duplo clique simula o pressionamento do atalho
+correspondente contra o `listener` que já está rodando (não substitui o
+listener, só oferece outra forma de acioná-lo). Ajuste o caminho
+`C:\hellena-capturas` dentro do `.bat` se o projeto estiver em outro
+lugar.
+
 ### 4. Destino das notas
 
 Reaproveita o vault do Second Brain já configurado:
