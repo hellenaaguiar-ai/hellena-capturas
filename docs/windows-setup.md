@@ -182,6 +182,21 @@ Se ainda assim der erro na gravação, a mensagem agora deve vir com a causa
 real (dispositivo não encontrado, etc.) em vez de um `AssertionError` em
 branco — copie o texto e me mande.
 
+### Problema conhecido (resolvido): listener morre com `Tcl_AsyncDelete`
+
+Se o terminal mostrar `Tcl_AsyncDelete: async handler deleted by the wrong
+thread` e o processo do listener morrer sozinho logo em seguida (o prompt
+do PowerShell volta sem você apertar nada) — isso **não é um aviso
+inofensivo, é um erro fatal do Tcl** que mata o processo inteiro,
+incluindo qualquer gravação/transcrição em andamento no momento.
+
+Causa: a janelinha vermelha de indicador visual criava um `Tk()` novo (e
+uma thread nova) a cada gravação — criar vários interpretadores Tcl em
+threads diferentes ao longo da vida do processo é uma causa conhecida
+desse crash no Windows. A partir desta versão existe só uma janela Tk,
+criada uma única vez e reaproveitada (mostra/esconde) em todas as
+gravações seguintes — `git pull` traz a correção.
+
 ## 7. Comandos úteis
 
 ```powershell
