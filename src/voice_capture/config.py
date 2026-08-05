@@ -31,6 +31,7 @@ class Config:
     vault_meeting_dir: Path
     vault_therapy_dir: Path
     hotkeys: dict = field(default_factory=lambda: dict(DEFAULT_HOTKEYS))
+    whisper_initial_prompt: str = ""
 
     @property
     def audio_archive_dir(self) -> Path:
@@ -98,6 +99,7 @@ def load_config(path: Path | str = DEFAULT_CONFIG_PATH) -> Config:
         data_dir=Path(raw.get("data_dir", "data")),
         whisper_model=raw.get("whisper_model", "small"),
         whisper_language=raw.get("whisper_language", "pt"),
+        whisper_initial_prompt=raw.get("whisper_initial_prompt", ""),
         anthropic_model=raw.get("anthropic_model", "claude-sonnet-5"),
         anthropic_api_key=api_key,
         audio_retention_days=int(raw.get("audio_retention_days", 30)),

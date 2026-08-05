@@ -36,7 +36,7 @@ def make_silent_wav(path: Path) -> Path:
     return path
 
 
-def fake_transcribe(path: Path, model_size: str, language: str) -> TranscriptResult:
+def fake_transcribe(path: Path, model_size: str, language: str, initial_prompt: str = "") -> TranscriptResult:
     label = "mic" if "mic" in path.name else "system"
     return TranscriptResult(text=f"texto transcrito ({label})", language="pt", duration_seconds=5.0)
 

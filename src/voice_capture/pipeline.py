@@ -19,7 +19,7 @@ from .process_ai import ProcessedCapture, process_transcript
 from .state import ItemState, STATUS_DONE, STATUS_ERROR, STATUS_PROCESSING, STATUS_TRANSCRIBING, StateStore
 from .transcribe import TranscriptResult, transcribe_audio
 
-TranscribeFn = Callable[[Path, str, str], TranscriptResult]
+TranscribeFn = Callable[[Path, str, str, str], TranscriptResult]
 ProcessFn = Callable[[str, str, str], ProcessedCapture]
 
 _RECORDED_AT_RE = re.compile(r"(\d{4}-\d{2}-\d{2}) (\d{2})-(\d{2})-(\d{2})")
@@ -78,7 +78,9 @@ def process_item(
         state.upsert(content_hash, item)
         state.save()
 
-        transcript = transcribe_fn(archive_path, config.whisper_model, config.whisper_language)
+        transcript = transcribe_fn(
+            archive_path, config.whisper_model, config.whisper_language, config.whisper_initial_prompt
+        )
 
         transcript_path = config.transcripts_raw_dir / f"{content_hash}.txt"
         transcript_path.write_text(transcript.text, encoding="utf-8")

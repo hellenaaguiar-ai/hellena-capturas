@@ -26,7 +26,7 @@ def make_config(tmp_path) -> Config:
     return config
 
 
-def fake_transcribe(path: Path, model_size: str, language: str) -> TranscriptResult:
+def fake_transcribe(path: Path, model_size: str, language: str, initial_prompt: str = "") -> TranscriptResult:
     return TranscriptResult(text="Esse personagem interpreta o controle como cuidado.", language="pt", duration_seconds=12.0)
 
 

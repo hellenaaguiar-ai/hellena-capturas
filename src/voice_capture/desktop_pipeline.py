@@ -25,7 +25,7 @@ from .markdown_writer import build_filename, write_note_atomic
 from .state import ItemState, STATUS_DONE, STATUS_ERROR, STATUS_PROCESSING, STATUS_TRANSCRIBING, StateStore
 from .transcribe import TranscriptResult, transcribe_audio
 
-TranscribeFn = Callable[[Path, str, str], TranscriptResult]
+TranscribeFn = Callable[[Path, str, str, str], TranscriptResult]
 MeetingProcessFn = Callable[[str, str, str], ProcessedMeeting]
 TherapyProcessFn = Callable[[str, str, str], ProcessedTherapy]
 
@@ -67,11 +67,15 @@ def process_desktop_recording(
         state.upsert(state_key, item)
         state.save()
 
-        mic_transcript: TranscriptResult = transcribe_fn(mic_path, config.whisper_model, config.whisper_language)
+        mic_transcript: TranscriptResult = transcribe_fn(
+            mic_path, config.whisper_model, config.whisper_language, config.whisper_initial_prompt
+        )
         mic_text = mic_transcript.text
         system_text = ""
         if system_path is not None:
-            system_transcript = transcribe_fn(system_path, config.whisper_model, config.whisper_language)
+            system_transcript = transcribe_fn(
+                system_path, config.whisper_model, config.whisper_language, config.whisper_initial_prompt
+            )
             system_text = system_transcript.text
 
         transcript_path = config.transcripts_raw_dir / f"{content_hash}_{mode.key}.txt"

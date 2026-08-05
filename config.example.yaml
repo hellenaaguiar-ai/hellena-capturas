@@ -17,6 +17,15 @@ data_dir: "data"
 whisper_model: "small"
 whisper_language: "pt"
 
+# Opcional: nomes proprios, termos em ingles e palavras que o Whisper erra
+# com frequencia (ex: seu nome, nomes de empresas/pessoas que voce cita
+# bastante). Nao e uma lista de substituicao automatica - e um "aviso"
+# passado ao modelo antes de ouvir o audio, que reduz bastante o erro de
+# grafia nesses termos especificos (nao cria nem inventa palavras que nao
+# foram ditas). Escreva como uma frase normal, com os termos exatamente
+# como devem aparecer:
+whisper_initial_prompt: "Hellena, We Founders, Ravi."
+
 # Modelo da Claude API usado para sintese/classificacao (so texto e enviado).
 anthropic_model: "claude-sonnet-5"
 

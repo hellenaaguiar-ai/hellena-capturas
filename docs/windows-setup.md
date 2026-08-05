@@ -39,6 +39,7 @@ vault_inbox_dir: "C:\\Users\\Hellena\\ObsidianVault\\Inbox\\Voz"
 data_dir: "data"
 whisper_model: "small"
 whisper_language: "pt"
+whisper_initial_prompt: "Hellena, We Founders, Ravi."
 anthropic_model: "claude-sonnet-5"
 audio_retention_days: 30
 
@@ -53,6 +54,18 @@ desktop:
     therapy: "ctrl+alt+t"
     stop: "ctrl+alt+p"
 ```
+
+`whisper_initial_prompt` é opcional e serve pra reduzir erro de grafia em
+nomes próprios e termos em inglês que aparecem em meio à fala em português
+(ex: `Hellena` virando `Helena`, `We Founders` virando `Way Fonders`, `Ravi`
+virando `Javi`). Liste os termos que mais aparecem nas suas gravações,
+escritos exatamente como devem sair. Não é uma substituição automática — o
+Whisper continua transcrevendo só o que ouviu, isso apenas melhora a chance
+de acertar a grafia certa desses termos específicos. Se mesmo assim o erro
+persistir bastante (principalmente em trechos inteiros em inglês), o
+próximo passo é trocar `whisper_model` de `"small"` para `"medium"` — mais
+lento na CPU, mas sensivelmente melhor em nomes próprios e troca de idioma
+no meio da fala.
 
 Edite `.env` com sua chave da Claude API (crie em
 [console.anthropic.com](https://console.anthropic.com)):

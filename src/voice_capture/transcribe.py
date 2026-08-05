@@ -24,9 +24,21 @@ def _get_model(model_size: str):
     return _model_cache[model_size]
 
 
-def transcribe_audio(path: Path, model_size: str, language: str) -> TranscriptResult:
+def transcribe_audio(
+    path: Path, model_size: str, language: str, initial_prompt: str = ""
+) -> TranscriptResult:
     model = _get_model(model_size)
-    segments, info = model.transcribe(str(path), language=language, vad_filter=True)
+    # initial_prompt so "avisa" o modelo, antes de ouvir, quais nomes/termos
+    # esperar (ver whisper_initial_prompt em config.yaml) - reduz erro em
+    # nomes proprios e palavras em ingles que aparecem em meio a fala em
+    # portugues, sem inventar nada: e so um vies na grafia, o modelo ainda
+    # transcreve so o que ouve.
+    segments, info = model.transcribe(
+        str(path),
+        language=language,
+        vad_filter=True,
+        initial_prompt=initial_prompt or None,
+    )
     text = " ".join(segment.text.strip() for segment in segments).strip()
     return TranscriptResult(
         text=text,
