@@ -40,7 +40,13 @@ simples (sem combinações complexas nem necessidade de suprimir o
 comportamento padrão da tecla), `keyboard` é suficiente e mantém tudo num
 único stack (Python).
 
-### 2. Captura dupla de áudio — `soundcard` (WASAPI loopback)
+### 2. Captura dupla de áudio — `sounddevice` (WASAPI loopback)
+
+(Trocamos de `soundcard` para `sounddevice`/PortAudio depois de um bug real
+em produção: `soundcard` assume que todo driver de áudio do Windows relata
+o formato `WAVEFORMATEXTENSIBLE`, e em drivers que não relatam isso a
+gravação falhava com um erro sem mensagem nenhuma configuração do Windows
+resolvia. `sounddevice` negocia o formato de forma mais tolerante.)
 
 Reunião e terapia gravam **duas trilhas separadas** ao mesmo tempo:
 - microfone (sua voz)

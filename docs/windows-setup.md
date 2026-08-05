@@ -164,25 +164,23 @@ Depois de validar, registre o listener para iniciar com o Windows:
 A partir do próximo login, os três atalhos ficam ativos automaticamente, sem
 precisar abrir nada.
 
-### Problema conhecido: erro ao gravar sem mensagem clara (`AssertionError`)
+### Problema conhecido (resolvido): `AssertionError` sem mensagem ao gravar
 
-Se ao apertar o atalho pra parar aparecer um erro na gravação (ou uma
-notificação "Erro na gravação" praticamente vazia), o motivo mais comum é o
-driver do microfone (ou da saída de áudio padrão, no modo Reunião/Terapia)
-não usar o formato de áudio que a biblioteca de captura espera
-(`WAVEFORMATEXTENSIBLE`). Isso é uma característica do driver/dispositivo,
-não um bug do código.
+Versões anteriores usavam a biblioteca `soundcard`, que assume que todo
+driver de áudio do Windows relata o formato `WAVEFORMATEXTENSIBLE`. Em
+alguns drivers isso é falso e a gravação falhava com um `AssertionError`
+sem mensagem — nenhuma configuração do Windows (nem trocar o "Formato
+Padrão" em Painel de Controle → Som) resolvia, porque é uma característica
+do driver, não algo configurável.
 
-Correção, no Windows:
-1. Painel de Controle → **Som** → aba **Gravação** (ou **Reprodução**, se o
-   erro for no modo Reunião/Terapia).
-2. Clique com o botão direito no dispositivo padrão → **Propriedades** →
-   aba **Avançado**.
-3. Troque **"Formato Padrão"** para uma opção comum, tipo *"2 canais, 16
-   bits, 48000 Hz (Qualidade DVD)"* — evite as opções de "Estúdio"/alta
-   resolução, que costumam ser as que causam esse erro.
-4. **Aplicar** → **OK**, feche o listener (ícone da bandeja → Sair) e abra
-   de novo.
+A partir desta versão o projeto usa `sounddevice` (PortAudio) em vez de
+`soundcard`, que não tem essa limitação. Se você via esse erro antes, dê
+`git pull`, reinstale a dependência nova (`pip install -e .[desktop]`) e
+teste de novo — não deve precisar mexer em nada no Windows.
+
+Se ainda assim der erro na gravação, a mensagem agora deve vir com a causa
+real (dispositivo não encontrado, etc.) em vez de um `AssertionError` em
+branco — copie o texto e me mande.
 
 ## 7. Comandos úteis
 

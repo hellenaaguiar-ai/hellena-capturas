@@ -175,14 +175,10 @@ def main() -> None:
 
     import keyboard
 
-    # Importa o soundcard uma unica vez aqui, nesta thread, ANTES de qualquer
-    # gravacao. O soundcard inicializa COM (API do Windows) sozinho na
-    # primeira vez que e importado - se isso acontecer so depois, dentro de
-    # uma thread de gravacao que ja chamou CoInitializeEx por conta propria
-    # (ver desktop/audio_capture.py), o proprio soundcard trata o retorno
-    # "ja inicializado" (S_FALSE) como erro fatal. Importando aqui primeiro,
-    # a inicializacao dele acontece limpa, sem conflito.
-    import soundcard  # noqa: F401
+    # Importa o sounddevice uma unica vez aqui, nesta thread, ANTES de
+    # qualquer gravacao - evita que duas threads de gravacao (mic + sistema)
+    # inicializem o PortAudio pela primeira vez ao mesmo tempo.
+    import sounddevice  # noqa: F401
 
     active_modes = modes_module.build_modes(config)
     for mode in active_modes:
