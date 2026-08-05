@@ -21,6 +21,7 @@ def make_config(tmp_path) -> Config:
         audio_retention_days=30,
         vault_meeting_dir=tmp_path / "vault" / "Inbox" / "Reuniões",
         vault_therapy_dir=tmp_path / "vault" / "Inbox" / "Terapia",
+        vault_class_dir=tmp_path / "vault" / "Inbox" / "Aulas",
     )
     config.ensure_dirs()
     return config

@@ -14,6 +14,7 @@ DEFAULT_HOTKEYS = {
     "idea": "ctrl+alt+i",
     "meeting": "ctrl+alt+r",
     "therapy": "ctrl+alt+t",
+    "class": "ctrl+alt+a",
     "stop": "ctrl+alt+p",
 }
 
@@ -30,6 +31,7 @@ class Config:
     audio_retention_days: int
     vault_meeting_dir: Path
     vault_therapy_dir: Path
+    vault_class_dir: Path
     hotkeys: dict = field(default_factory=lambda: dict(DEFAULT_HOTKEYS))
     whisper_initial_prompt: str = ""
 
@@ -63,6 +65,7 @@ class Config:
             self.vault_inbox_dir,
             self.vault_meeting_dir,
             self.vault_therapy_dir,
+            self.vault_class_dir,
             self.data_dir,
             self.audio_archive_dir,
             self.transcripts_raw_dir,
@@ -105,5 +108,6 @@ def load_config(path: Path | str = DEFAULT_CONFIG_PATH) -> Config:
         audio_retention_days=int(raw.get("audio_retention_days", 30)),
         vault_meeting_dir=Path(desktop_raw.get("vault_meeting_dir", vault_inbox_dir.parent / "Reuniões")),
         vault_therapy_dir=Path(desktop_raw.get("vault_therapy_dir", vault_inbox_dir.parent / "Terapia")),
+        vault_class_dir=Path(desktop_raw.get("vault_class_dir", vault_inbox_dir.parent / "Aulas")),
         hotkeys=hotkeys,
     )

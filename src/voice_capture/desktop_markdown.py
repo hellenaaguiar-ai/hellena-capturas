@@ -1,11 +1,11 @@
-"""Monta o Markdown das notas de reuniao e terapia (modos desktop)."""
+"""Monta o Markdown das notas de reuniao, terapia e aula (modos desktop)."""
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
-from .desktop_ai import ProcessedMeeting, ProcessedTherapy
+from .desktop_ai import ProcessedClass, ProcessedMeeting, ProcessedTherapy
 from .markdown_writer import CONFIDENCE_DISPLAY, build_filename  # reaproveita slugify/nome de arquivo
 
 
@@ -14,7 +14,7 @@ class DesktopNoteMeta:
     content_hash: str
     created_at: datetime
     recorded_at: datetime
-    mic_audio_path: str
+    mic_audio_path: Optional[str]
     system_audio_path: Optional[str]
     transcription_model: str
     processing_model: str
@@ -124,6 +124,49 @@ def build_therapy_markdown(processed: ProcessedTherapy, mic_text: str, system_te
 
 ## Transcrição — terapeuta (áudio do sistema)
 {system_text or "_Sem áudio do sistema capturado._"}
+"""
+    return frontmatter + "\n" + body.strip() + "\n"
+
+
+def build_class_markdown(processed: ProcessedClass, class_text: str, meta: DesktopNoteMeta) -> str:
+    confidence_key = processed.confidence if processed.confidence in CONFIDENCE_DISPLAY else "baixa"
+    needs_review = confidence_key == "baixa"
+
+    frontmatter = "\n".join(
+        [
+            "---",
+            "type: class-capture",
+            f"id: {meta.content_hash[:16]}",
+            f"created_at: {meta.created_at.isoformat()}",
+            f"recorded_at: {meta.recorded_at.isoformat()}",
+            "source: desktop-voice",
+            "processing_status: done",
+            f"confidence: {CONFIDENCE_DISPLAY[confidence_key]}",
+            f"needs_review: {'true' if needs_review else 'false'}",
+            f"topics: {_yaml_list(processed.topics)}",
+            f"audio_file: {meta.system_audio_path or ''}",
+            f"transcription_model: {meta.transcription_model}",
+            f"processing_model: {meta.processing_model}",
+            "---",
+        ]
+    )
+
+    uncertainty_block = f"\n> ⚠️ {processed.uncertainty_notes}\n" if processed.uncertainty_notes else ""
+
+    body = f"""
+# {processed.title}
+{uncertainty_block}
+## Resumo
+{processed.summary}
+
+## Tópicos abordados
+{_bullets(processed.topics)}
+
+## Pontos-chave
+{_bullets(processed.key_points)}
+
+## Transcrição da aula
+{class_text or "_Sem áudio capturado._"}
 """
     return frontmatter + "\n" + body.strip() + "\n"
 

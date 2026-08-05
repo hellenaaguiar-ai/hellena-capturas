@@ -1,6 +1,6 @@
-"""Orquestra uma gravacao de reuniao/aula ou terapia: duas trilhas de audio
-ja gravadas -> transcricao de cada uma -> estruturacao por IA conforme o
-modo -> Markdown no vault -> estado local.
+"""Orquestra uma gravacao de reuniao, terapia ou aula: uma ou duas trilhas
+de audio ja gravadas -> transcricao de cada uma -> estruturacao por IA
+conforme o modo -> Markdown no vault -> estado local.
 
 O modo "ideia" no desktop reaproveita o pipeline mobile (pipeline.py)
 diretamente, ja que produz o mesmo tipo de nota - nao passa por aqui.
@@ -12,14 +12,21 @@ from pathlib import Path
 from typing import Callable, Optional
 
 from .config import Config
-from .desktop.modes import CaptureMode, NOTE_TYPE_MEETING, NOTE_TYPE_THERAPY
+from .desktop.modes import CaptureMode, NOTE_TYPE_CLASS, NOTE_TYPE_MEETING, NOTE_TYPE_THERAPY
 from .desktop_ai import (
+    ProcessedClass,
     ProcessedMeeting,
     ProcessedTherapy,
+    process_class_transcript,
     process_meeting_transcript,
     process_therapy_transcript,
 )
-from .desktop_markdown import DesktopNoteMeta, build_meeting_markdown, build_therapy_markdown
+from .desktop_markdown import (
+    DesktopNoteMeta,
+    build_class_markdown,
+    build_meeting_markdown,
+    build_therapy_markdown,
+)
 from .hashing import combined_hash
 from .markdown_writer import build_filename, write_note_atomic
 from .state import ItemState, STATUS_DONE, STATUS_ERROR, STATUS_PROCESSING, STATUS_TRANSCRIBING, StateStore
@@ -28,6 +35,7 @@ from .transcribe import TranscriptResult, transcribe_audio
 TranscribeFn = Callable[[Path, str, str, str], TranscriptResult]
 MeetingProcessFn = Callable[[str, str, str], ProcessedMeeting]
 TherapyProcessFn = Callable[[str, str, str], ProcessedTherapy]
+ClassProcessFn = Callable[[str, str, str], ProcessedClass]
 
 
 def _now_iso() -> str:
@@ -36,7 +44,7 @@ def _now_iso() -> str:
 
 def process_desktop_recording(
     mode: CaptureMode,
-    mic_path: Path,
+    mic_path: Optional[Path],
     system_path: Optional[Path],
     recorded_at: datetime,
     config: Config,
@@ -44,8 +52,9 @@ def process_desktop_recording(
     transcribe_fn: TranscribeFn = transcribe_audio,
     process_meeting_fn: MeetingProcessFn = process_meeting_transcript,
     process_therapy_fn: TherapyProcessFn = process_therapy_transcript,
+    process_class_fn: ClassProcessFn = process_class_transcript,
 ) -> str:
-    if mode.note_type not in (NOTE_TYPE_MEETING, NOTE_TYPE_THERAPY):
+    if mode.note_type not in (NOTE_TYPE_MEETING, NOTE_TYPE_THERAPY, NOTE_TYPE_CLASS):
         raise ValueError(f"Modo desktop nao suportado neste pipeline: {mode.key}")
 
     content_hash = combined_hash([p for p in (mic_path, system_path) if p is not None])
@@ -54,8 +63,9 @@ def process_desktop_recording(
     if state.is_done(state_key):
         return "skipped-duplicate"
 
+    source_name = (mic_path or system_path).name  # aula nao tem mic_path, so system_path
     existing = state.get(state_key)
-    item = existing or ItemState(source_filename=mic_path.name, first_seen_at=_now_iso())
+    item = existing or ItemState(source_filename=source_name, first_seen_at=_now_iso())
     item.attempts += 1
     item.updated_at = _now_iso()
     state.upsert(state_key, item)
@@ -67,10 +77,12 @@ def process_desktop_recording(
         state.upsert(state_key, item)
         state.save()
 
-        mic_transcript: TranscriptResult = transcribe_fn(
-            mic_path, config.whisper_model, config.whisper_language, config.whisper_initial_prompt
-        )
-        mic_text = mic_transcript.text
+        mic_text = ""
+        if mic_path is not None:
+            mic_transcript: TranscriptResult = transcribe_fn(
+                mic_path, config.whisper_model, config.whisper_language, config.whisper_initial_prompt
+            )
+            mic_text = mic_transcript.text
         system_text = ""
         if system_path is not None:
             system_transcript = transcribe_fn(
@@ -99,7 +111,7 @@ def process_desktop_recording(
             content_hash=content_hash,
             created_at=datetime.now().astimezone(),
             recorded_at=recorded_at,
-            mic_audio_path=str(mic_path),
+            mic_audio_path=str(mic_path) if mic_path is not None else None,
             system_audio_path=str(system_path) if system_path is not None else None,
             transcription_model=f"faster-whisper-{config.whisper_model}",
             processing_model=config.anthropic_model,
@@ -109,10 +121,14 @@ def process_desktop_recording(
             processed_meeting = process_meeting_fn(labeled_text, config.anthropic_api_key, config.anthropic_model)
             markdown = build_meeting_markdown(processed_meeting, mic_text, system_text, meta)
             title = processed_meeting.title
-        else:
+        elif mode.note_type == NOTE_TYPE_THERAPY:
             processed_therapy = process_therapy_fn(labeled_text, config.anthropic_api_key, config.anthropic_model)
             markdown = build_therapy_markdown(processed_therapy, mic_text, system_text, meta)
             title = processed_therapy.title
+        else:
+            processed_class = process_class_fn(system_text, config.anthropic_api_key, config.anthropic_model)
+            markdown = build_class_markdown(processed_class, system_text, meta)
+            title = processed_class.title
 
         filename = build_filename(recorded_at, title)
         final_path = write_note_atomic(mode.vault_dir, filename, markdown)

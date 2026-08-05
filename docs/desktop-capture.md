@@ -1,8 +1,8 @@
 # Captura no desktop — substituindo o Superwhisper
 
 Extensão do projeto: captura por voz **no computador**, com atalho de teclado
-global, para três casos que hoje passam pelo Superwhisper — reunião/aula,
-terapia e ideia solta — sem pagar a assinatura dele.
+global, para quatro casos — ideia solta, reunião, terapia e aula — sem pagar
+assinatura de nenhuma ferramenta de terceiro.
 
 ## Por que isso é um componente diferente do pipeline do celular
 
@@ -18,20 +18,26 @@ arquitetura nova, não uma extensão do script existente.
 
 Um hotkey diferente por modo (sem seletor no meio, sem clique extra):
 
-| Modo | Atalho padrão | Captura áudio do sistema? |
-|---|---|---|
-| Ideia | `Ctrl+Alt+I` | Não — só microfone |
-| Reunião/aula | `Ctrl+Alt+R` | Sim — microfone + o que toca no computador |
-| Terapia | `Ctrl+Alt+T` | Sim — microfone + o que toca no computador |
-| **Parar** (qualquer modo) | `Ctrl+Alt+P` | — |
+| Modo | Atalho padrão | Microfone? | Áudio do sistema? |
+|---|---|---|---|
+| Ideia | `Ctrl+Alt+I` | Sim | Não |
+| Reunião | `Ctrl+Alt+R` | Sim | Sim — o que toca no computador |
+| Terapia | `Ctrl+Alt+T` | Sim | Sim — o que toca no computador |
+| Aula | `Ctrl+Alt+A` | **Não** | Sim — o que toca no computador |
+| **Parar** (qualquer modo) | `Ctrl+Alt+P` | — | — |
+
+Aula é o único modo que não grava seu microfone: você está assistindo, não
+falando, então não há o que capturar do seu lado — só o áudio da aula em si
+(vídeo, chamada gravada, curso). Isso também evita gravar sons ambiente sem
+necessidade.
 
 Apertar uma vez começa a gravar; apertar de novo (mesmo atalho) encerra —
-igual ao comportamento do Atalho no iPhone. Além disso existe um quarto
-atalho, **Parar**, que encerra qualquer gravação em andamento sem precisar
-lembrar qual dos três você usou para começar — útil se você apertou
+igual ao comportamento do Atalho no iPhone. Além disso existe um atalho à
+parte, **Parar**, que encerra qualquer gravação em andamento sem precisar
+lembrar qual dos quatro você usou para começar — útil se você apertou
 `Ctrl+Alt+R` mas não tem certeza, por exemplo. Se nada estiver gravando,
-apertar Parar não faz nada. Todos os quatro atalhos e os nomes/pastas dos
-três modos são configuráveis em `config.yaml`, sem precisar mexer em código.
+apertar Parar não faz nada. Todos os cinco atalhos e os nomes/pastas dos
+quatro modos são configuráveis em `config.yaml`, sem precisar mexer em código.
 
 Considerei usar AutoHotkey (mais robusto historicamente para hotkeys no
 Windows) em vez da biblioteca Python `keyboard`, mas isso significaria
@@ -51,8 +57,9 @@ resolvia. `sounddevice` negocia o formato de forma mais tolerante.)
 Reunião e terapia gravam **duas trilhas separadas** ao mesmo tempo:
 - microfone (sua voz)
 - "loopback" do dispositivo de saída padrão (o que está tocando no
-  computador — voz da outra pessoa numa chamada, áudio de uma aula gravada,
-  etc.)
+  computador — voz da outra pessoa numa chamada, áudio de um vídeo, etc.)
+
+Aula grava só a segunda trilha (loopback) — sem microfone, ver tabela acima.
 
 Efeito colateral bom: como as duas vozes já chegam em arquivos separados, a
 transcrição naturalmente já vem com "quem é você" e "quem é a outra pessoa"
@@ -79,24 +86,25 @@ gravação anterior ainda está sendo processada.
 
 ### 3.1. Alternativa ao atalho de teclado: ícone no Desktop
 
-Quem preferir clicar em vez de decorar `Ctrl+Alt+I/R/T/P` pode usar os
+Quem preferir clicar em vez de decorar `Ctrl+Alt+I/R/T/A/P` pode usar os
 arquivos em `scripts/windows/` (`Gravar Ideia.bat`, `Gravar Reuniao.bat`,
-`Gravar Terapia.bat`, `Parar de Gravar.bat`). Um duplo clique simula o
-pressionamento do atalho correspondente contra o `listener` que já está
-rodando (não substitui o listener, só oferece outra forma de acioná-lo).
-`Parar de Gravar` encerra a gravação em andamento independente de qual dos
-três modos a começou — não precisa saber em qual ícone você clicou antes.
+`Gravar Terapia.bat`, `Gravar Aula.bat`, `Parar de Gravar.bat`). Um duplo
+clique simula o pressionamento do atalho correspondente contra o `listener`
+que já está rodando (não substitui o listener, só oferece outra forma de
+acioná-lo). `Parar de Gravar` encerra a gravação em andamento independente
+de qual dos quatro modos a começou — não precisa saber em qual ícone você
+clicou antes.
 
 Copiar o `.bat` direto pra Área de Trabalho funciona, mas fica com o ícone
 genérico de arquivo `.bat` do Windows. Para ter um ícone próprio por ação
-(bolinha colorida com I/R/T, e um quadrado vermelho para Parar — ver
+(bolinha colorida com I/R/T/A, e um quadrado vermelho para Parar — ver
 `assets/icons/`), rode uma vez, com PowerShell aberto na pasta do projeto:
 
 ```powershell
 .\scripts\windows\criar-atalhos-desktop.ps1
 ```
 
-Isso cria quatro atalhos de verdade (`.lnk`) na Área de Trabalho — não move
+Isso cria cinco atalhos de verdade (`.lnk`) na Área de Trabalho — não move
 nem duplica os `.bat`, só aponta pra eles com o ícone certo. Rodar de novo
 recria os atalhos (útil se você mudar o projeto de pasta). Se preferir
 fazer isso na mão em vez de rodar o script: clique direito no `.bat` →
@@ -116,6 +124,9 @@ Reaproveita o vault do Second Brain já configurado:
 - **Terapia** → pasta própria (`Inbox/Terapia` por padrão), nota tipo
   `therapy-capture`: síntese da sessão, temas abordados, percepções,
   encaminhamentos, e as duas transcrições (você / terapeuta).
+- **Aula** → pasta própria (`Inbox/Aulas` por padrão), nota tipo
+  `class-capture`: resumo, tópicos abordados, pontos-chave, e a
+  transcrição única da aula (sem trilha de microfone).
 
 Mesmas regras de autoria já usadas no pipeline mobile se aplicam aqui: não
 inventar, não completar, não diagnosticar ou interpretar além do que foi

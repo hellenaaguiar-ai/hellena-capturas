@@ -16,6 +16,7 @@ def make_config(tmp_path) -> Config:
         audio_retention_days=30,
         vault_meeting_dir=tmp_path / "vault" / "Inbox" / "Reuniões",
         vault_therapy_dir=tmp_path / "vault" / "Inbox" / "Terapia",
+        vault_class_dir=tmp_path / "vault" / "Inbox" / "Aulas",
     )
 
 
@@ -43,6 +44,16 @@ def test_trigger_mode_unknown_key_raises(tmp_path):
     config = make_config(tmp_path)
     with pytest.raises(ValueError):
         trigger_mode("nao-existe", config, send_keys=lambda k: None)
+
+
+def test_trigger_mode_class(tmp_path):
+    config = make_config(tmp_path)
+    sent = []
+
+    mode = trigger_mode("class", config, send_keys=sent.append)
+
+    assert mode.key == "class"
+    assert sent == [config.hotkeys["class"]]
 
 
 def test_trigger_stop_sends_configured_hotkey(tmp_path):

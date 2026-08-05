@@ -23,16 +23,16 @@ iPhone (Atalho + Botão de Ação)
         → Markdown escrito no vault do Obsidian
 ```
 
-**Desktop** — substitui o Superwhisper: atalho de teclado global com 3
-modos (ideia, reunião/aula, terapia), gravando microfone e, quando o modo
+**Desktop** — substitui o Superwhisper: atalho de teclado global com 4
+modos (ideia, reunião, terapia, aula), gravando microfone e, quando o modo
 pede, também o áudio do sistema (para separar "você" de "outra pessoa" sem
-diarização):
+diarização) — o modo aula grava só o áudio do sistema, sem microfone:
 
 ```
-Ctrl+Alt+I / Ctrl+Alt+R / Ctrl+Alt+T
-  → grava mic (+ áudio do sistema se o modo pedir)
+Ctrl+Alt+I / Ctrl+Alt+R / Ctrl+Alt+T / Ctrl+Alt+A
+  → grava mic (+ áudio do sistema se o modo pedir; aula só grava sistema)
     → Whisper local transcreve cada trilha
-      → Claude API estrutura conforme o modo (ideia / reunião / terapia)
+      → Claude API estrutura conforme o modo (ideia / reunião / terapia / aula)
         → Markdown escrito no vault do Obsidian
 ```
 
@@ -54,8 +54,11 @@ texto trafega para a Claude API, áudio nunca sai da máquina).
 aperte de novo para parar, volte ao que estava fazendo. A nota aparece no
 Obsidian em até ~15 minutos, sozinha.
 
-**Desktop:** aperte `Ctrl+Alt+I`/`R`/`T` conforme o modo, fale, aperte de
-novo para parar. Uma notificação confirma quando a nota estiver pronta.
+**Desktop:** aperte `Ctrl+Alt+I`/`R`/`T`/`A` conforme o modo, fale (exceto no
+modo aula), aperte de novo para parar — ou `Ctrl+Alt+P` pra parar qualquer
+um sem precisar lembrar qual você usou. Uma notificação confirma quando a
+nota estiver pronta. Ícones equivalentes ficam disponíveis na Área de
+Trabalho depois de rodar `scripts\windows\criar-atalhos-desktop.ps1`.
 
 Se algo falhar, em qualquer um dos dois fluxos, você vai ver uma nota
 `_Erros de captura.md` no vault explicando o que houve — a captura nunca

@@ -1,5 +1,6 @@
-# Cria os atalhos (.lnk) de Ideia/Reuniao/Terapia na Area de Trabalho, ja
-# com icone proprio (assets/icons/*.ico) em vez do icone generico de .bat.
+# Cria os atalhos (.lnk) de Ideia/Reuniao/Terapia/Aula/Parar na Area de
+# Trabalho, ja com icone proprio (assets/icons/*.ico) em vez do icone
+# generico de .bat.
 #
 # Uso: abra o PowerShell dentro da pasta do projeto e rode:
 #   .\scripts\windows\criar-atalhos-desktop.ps1
@@ -17,6 +18,7 @@ $modes = @(
     @{ Nome = "Gravar Ideia";   Bat = "Gravar Ideia.bat";   Icone = "ideia.ico" },
     @{ Nome = "Gravar Reuniao"; Bat = "Gravar Reuniao.bat"; Icone = "reuniao.ico" },
     @{ Nome = "Gravar Terapia"; Bat = "Gravar Terapia.bat"; Icone = "terapia.ico" },
+    @{ Nome = "Gravar Aula";    Bat = "Gravar Aula.bat";    Icone = "aula.ico" },
     @{ Nome = "Parar de Gravar"; Bat = "Parar de Gravar.bat"; Icone = "parar.ico" }
 )
 
@@ -40,4 +42,4 @@ foreach ($modo in $modes) {
     Write-Host "Criado: $lnkPath"
 }
 
-Write-Host "`nPronto. Os 4 atalhos estao na Area de Trabalho, com icone proprio."
+Write-Host "`nPronto. Os 5 atalhos estao na Area de Trabalho, com icone proprio."

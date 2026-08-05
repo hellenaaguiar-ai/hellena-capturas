@@ -1,4 +1,4 @@
-"""Definicao dos modos de captura no desktop (ideia / reuniao / terapia)."""
+"""Definicao dos modos de captura no desktop (ideia / reuniao / terapia / aula)."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -9,6 +9,7 @@ from ..config import Config
 NOTE_TYPE_IDEA = "voice-capture"
 NOTE_TYPE_MEETING = "meeting-capture"
 NOTE_TYPE_THERAPY = "therapy-capture"
+NOTE_TYPE_CLASS = "class-capture"
 
 
 @dataclass(frozen=True)
@@ -16,6 +17,7 @@ class CaptureMode:
     key: str
     label: str
     hotkey: str
+    capture_mic: bool
     capture_system_audio: bool
     note_type: str
     vault_dir: Path
@@ -28,6 +30,7 @@ def build_modes(config: Config) -> list[CaptureMode]:
             key="idea",
             label="Ideia",
             hotkey=config.hotkeys["idea"],
+            capture_mic=True,
             capture_system_audio=False,
             note_type=NOTE_TYPE_IDEA,
             vault_dir=config.vault_inbox_dir,
@@ -36,6 +39,7 @@ def build_modes(config: Config) -> list[CaptureMode]:
             key="meeting",
             label="Reunião",
             hotkey=config.hotkeys["meeting"],
+            capture_mic=True,
             capture_system_audio=True,
             note_type=NOTE_TYPE_MEETING,
             vault_dir=config.vault_meeting_dir,
@@ -44,9 +48,22 @@ def build_modes(config: Config) -> list[CaptureMode]:
             key="therapy",
             label="Terapia",
             hotkey=config.hotkeys["therapy"],
+            capture_mic=True,
             capture_system_audio=True,
             note_type=NOTE_TYPE_THERAPY,
             vault_dir=config.vault_therapy_dir,
+        ),
+        CaptureMode(
+            key="class",
+            label="Aula",
+            hotkey=config.hotkeys["class"],
+            # Aula so grava o audio da aula (sistema) - voce esta assistindo,
+            # nao falando, entao nao ha por que gravar o microfone (mesma
+            # decisao do script antigo que sempre funcionou pra esse caso).
+            capture_mic=False,
+            capture_system_audio=True,
+            note_type=NOTE_TYPE_CLASS,
+            vault_dir=config.vault_class_dir,
         ),
     ]
 

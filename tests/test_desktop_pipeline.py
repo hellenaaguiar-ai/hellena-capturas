@@ -4,7 +4,7 @@ from pathlib import Path
 
 from voice_capture.config import Config
 from voice_capture.desktop.modes import get_mode
-from voice_capture.desktop_ai import ProcessedMeeting, ProcessedTherapy
+from voice_capture.desktop_ai import ProcessedClass, ProcessedMeeting, ProcessedTherapy
 from voice_capture.desktop_pipeline import process_desktop_recording
 from voice_capture.state import STATUS_DONE, STATUS_ERROR, StateStore
 from voice_capture.transcribe import TranscriptResult
@@ -22,6 +22,7 @@ def make_config(tmp_path) -> Config:
         audio_retention_days=30,
         vault_meeting_dir=tmp_path / "vault" / "Inbox" / "Reuniões",
         vault_therapy_dir=tmp_path / "vault" / "Inbox" / "Terapia",
+        vault_class_dir=tmp_path / "vault" / "Inbox" / "Aulas",
     )
     config.ensure_dirs()
     return config
@@ -183,3 +184,50 @@ def test_idea_mode_has_no_system_audio(tmp_path):
     config = make_config(tmp_path)
     mode = get_mode(config, "idea")
     assert mode.capture_system_audio is False
+
+
+def fake_class_process(text: str, api_key: str, model: str) -> ProcessedClass:
+    assert text == "texto transcrito (system)"
+    return ProcessedClass(
+        title="Introdução a métricas de produto",
+        summary="Aula sobre como escolher metricas norte.",
+        topics=["North star metric", "Métricas de vaidade"],
+        key_points=["Nem toda metrica que sobe e uma metrica boa"],
+        confidence="alta",
+        uncertainty_notes="",
+    )
+
+
+def test_class_mode_has_no_mic_capture(tmp_path):
+    config = make_config(tmp_path)
+    mode = get_mode(config, "class")
+    assert mode.capture_mic is False
+    assert mode.capture_system_audio is True
+
+
+def test_class_mode_creates_note_without_mic_track(tmp_path):
+    config = make_config(tmp_path)
+    state = StateStore(config.state_file)
+    mode = get_mode(config, "class")
+
+    system_path = make_silent_wav(config.desktop_audio_dir / "class-system-1.wav")
+
+    result = process_desktop_recording(
+        mode,
+        None,
+        system_path,
+        datetime(2026, 7, 23, 9, 0),
+        config,
+        state,
+        transcribe_fn=fake_transcribe,
+        process_class_fn=fake_class_process,
+    )
+
+    assert result == "done"
+    notes = list(mode.vault_dir.glob("*.md"))
+    assert len(notes) == 1
+    content = notes[0].read_text(encoding="utf-8")
+    assert "type: class-capture" in content
+    assert "North star metric" in content
+    assert "texto transcrito (system)" in content
+    assert "audio_file_mic" not in content

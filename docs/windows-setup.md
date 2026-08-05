@@ -48,10 +48,12 @@ audio_retention_days: 30
 desktop:
   vault_meeting_dir: "C:\\Users\\Hellena\\ObsidianVault\\Inbox\\Reuniões"
   vault_therapy_dir: "C:\\Users\\Hellena\\ObsidianVault\\Inbox\\Terapia"
+  vault_class_dir: "C:\\Users\\Hellena\\ObsidianVault\\Inbox\\Aulas"
   hotkeys:
     idea: "ctrl+alt+i"
     meeting: "ctrl+alt+r"
     therapy: "ctrl+alt+t"
+    class: "ctrl+alt+a"
     stop: "ctrl+alt+p"
 ```
 
@@ -142,7 +144,8 @@ Aperte `Ctrl+Alt+I` (modo ideia), fale, aperte de novo — deve aparecer uma
 janelinha vermelha no canto da tela enquanto grava, e uma notificação
 "Captura concluída" ao terminar. Teste também `Ctrl+Alt+R` (reunião) com
 algum áudio tocando no computador (ex: um vídeo), para confirmar que a
-trilha de sistema está sendo capturada.
+trilha de sistema está sendo capturada. `Ctrl+Alt+A` (aula) usa a mesma
+trilha de sistema, só que sem microfone.
 
 Um ícone azul aparece na bandeja do sistema (perto do relógio) assim que o
 listener inicia — fica vermelho enquanto uma gravação está em andamento.
@@ -161,7 +164,7 @@ Depois de validar, registre o listener para iniciar com o Windows:
    Inicializar do seu usuário.
 3. Copie um atalho para `iniciar_listener.vbs` dentro dessa pasta.
 
-A partir do próximo login, os três atalhos ficam ativos automaticamente, sem
+A partir do próximo login, os quatro atalhos de modo ficam ativos automaticamente, sem
 precisar abrir nada.
 
 ### Problema conhecido (resolvido): `AssertionError` sem mensagem ao gravar

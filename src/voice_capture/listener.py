@@ -49,8 +49,10 @@ def _notify(title: str, message: str) -> None:
         logging.info("%s: %s", title, message)
 
 
-def _paths_for(config: Config, mode: CaptureMode, timestamp: str) -> tuple[Path, Optional[Path]]:
-    mic_path = config.desktop_audio_dir / f"{mode.key}-mic-{timestamp}.wav"
+def _paths_for(config: Config, mode: CaptureMode, timestamp: str) -> tuple[Optional[Path], Optional[Path]]:
+    mic_path = (
+        config.desktop_audio_dir / f"{mode.key}-mic-{timestamp}.wav" if mode.capture_mic else None
+    )
     system_path = (
         config.desktop_audio_dir / f"{mode.key}-system-{timestamp}.wav"
         if mode.capture_system_audio
@@ -59,7 +61,7 @@ def _paths_for(config: Config, mode: CaptureMode, timestamp: str) -> tuple[Path,
     return mic_path, system_path
 
 
-def _process_in_background(config: Config, mode: CaptureMode, mic_path: Path, system_path: Optional[Path], recorded_at: datetime) -> None:
+def _process_in_background(config: Config, mode: CaptureMode, mic_path: Optional[Path], system_path: Optional[Path], recorded_at: datetime) -> None:
     with _pipeline_lock:
         state = StateStore(config.state_file)
         try:

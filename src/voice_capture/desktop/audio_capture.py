@@ -66,10 +66,12 @@ def _default_loopback_device(sd) -> tuple[int, int]:
 
 
 class RecordingSession:
-    """Grava microfone e, se configurado, a trilha de loopback do sistema,
-    em threads separadas, ate stop() ser chamado."""
+    """Grava, cada uma se configurada, a trilha do microfone e/ou a trilha
+    de loopback do sistema, em threads separadas, ate stop() ser chamado.
+    O modo Aula, por exemplo, so grava a trilha de sistema (mic_path=None) -
+    voce esta assistindo, nao falando."""
 
-    def __init__(self, mic_path: Path, system_path: Optional[Path]):
+    def __init__(self, mic_path: Optional[Path], system_path: Optional[Path]):
         self.mic_path = mic_path
         self.system_path = system_path
         self._stop_event = threading.Event()
@@ -79,7 +81,8 @@ class RecordingSession:
         self._error: Optional[Exception] = None
 
     def start(self) -> None:
-        self._threads.append(threading.Thread(target=self._run_mic, daemon=True))
+        if self.mic_path is not None:
+            self._threads.append(threading.Thread(target=self._run_mic, daemon=True))
         if self.system_path is not None:
             self._threads.append(threading.Thread(target=self._run_system, daemon=True))
         for t in self._threads:
@@ -121,14 +124,16 @@ class RecordingSession:
         except Exception as exc:  # noqa: BLE001
             self._error = exc
 
-    def stop(self) -> tuple[Path, Optional[Path]]:
+    def stop(self) -> tuple[Optional[Path], Optional[Path]]:
         self._stop_event.set()
         for t in self._threads:
             t.join(timeout=5)
         if self._error is not None:
             raise self._error
 
-        mic_path = _write_wav(self.mic_path, self._mic_frames)
+        mic_path = None
+        if self.mic_path is not None:
+            mic_path = _write_wav(self.mic_path, self._mic_frames)
         system_path = None
         if self.system_path is not None:
             system_path = _write_wav(self.system_path, self._system_frames)
@@ -158,7 +163,7 @@ def _write_wav(path: Path, frames: list) -> Path:
     return path
 
 
-def start_capture(mic_path: Path, system_path: Optional[Path]) -> RecordingSession:
+def start_capture(mic_path: Optional[Path], system_path: Optional[Path]) -> RecordingSession:
     session = RecordingSession(mic_path, system_path)
     session.start()
     return session

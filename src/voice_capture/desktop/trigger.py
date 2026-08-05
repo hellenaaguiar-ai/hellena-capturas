@@ -3,15 +3,16 @@ teclado - simula o pressionamento do hotkey configurado, pra quem preferir
 clicar num icone no Desktop em vez de decorar Ctrl+Alt+X. So funciona com
 o listener ja rodando.
 
-Cada modo (idea/meeting/therapy) alterna: aperta uma vez pra comecar,
-aperta o MESMO de novo pra parar. 'stop' e um atalho a parte que encerra
-qualquer gravacao em andamento, seja ela qual modo for - pensado pra quem
-nao lembra em qual dos tres cliques comecou a gravar.
+Cada modo (idea/meeting/therapy/class) alterna: aperta uma vez pra
+comecar, aperta o MESMO de novo pra parar. 'stop' e um atalho a parte que
+encerra qualquer gravacao em andamento, seja ela qual modo for - pensado
+pra quem nao lembra em qual dos quatro cliques comecou a gravar.
 
 Uso:
   python -m voice_capture.desktop.trigger idea
   python -m voice_capture.desktop.trigger meeting
   python -m voice_capture.desktop.trigger therapy
+  python -m voice_capture.desktop.trigger class
   python -m voice_capture.desktop.trigger stop
 """
 from __future__ import annotations
@@ -22,7 +23,7 @@ from typing import Callable
 from ..config import Config, load_config
 from .modes import CaptureMode, build_modes
 
-VALID_MODE_KEYS = ("idea", "meeting", "therapy")
+VALID_MODE_KEYS = ("idea", "meeting", "therapy", "class")
 STOP_KEY = "stop"
 ALL_TRIGGER_KEYS = VALID_MODE_KEYS + (STOP_KEY,)
 

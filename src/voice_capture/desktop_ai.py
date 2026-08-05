@@ -1,4 +1,4 @@
-"""Processamento por IA dos modos desktop (reuniao/aula e terapia).
+"""Processamento por IA dos modos desktop (reuniao, terapia e aula).
 
 Mesmas regras de autoria do modo ideia: nao inventar, nao completar, nao
 transformar inferencia em fato. O modo terapia tem uma regra extra: nao
@@ -198,6 +198,71 @@ def process_therapy_transcript(labeled_text: str, api_key: str, model: str) -> P
         themes=data.get("themes", []),
         insights=data.get("insights", []),
         follow_ups=data.get("follow_ups", []),
+        confidence=data.get("confidence", "baixa"),
+        uncertainty_notes=data.get("uncertainty_notes", ""),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Aula
+# ---------------------------------------------------------------------------
+
+CLASS_SYSTEM_PROMPT = f"""\
+Voce processa a transcricao do audio de uma aula/curso (Hotmart, YouTube, \
+curso gravado, etc.) - uma unica trilha, so o audio da aula, sem \
+microfone (quem gravou estava so assistindo, nao falando).
+
+{COMMON_RULES}"""
+
+CLASS_TOOL_SCHEMA = {
+    "name": "structure_class_capture",
+    "description": "Estrutura a transcricao de uma aula em resumo e topicos abordados.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "title": {"type": "string", "description": "Titulo curto da aula (ate 80 caracteres)."},
+            "summary": {"type": "string", "description": "Resumo fiel do conteudo da aula, 3 a 6 frases."},
+            "topics": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Topicos/assuntos abordados na aula, na ordem em que apareceram.",
+            },
+            "key_points": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Pontos/afirmacoes importantes destacados na aula. Vazio se nenhum se destacou.",
+            },
+            "confidence": {"type": "string", "enum": CONFIDENCE_LEVELS},
+            "uncertainty_notes": {"type": "string", "description": "String vazia se nao houver ambiguidade."},
+        },
+        "required": ["title", "summary", "topics", "key_points", "confidence", "uncertainty_notes"],
+    },
+}
+
+
+@dataclass
+class ProcessedClass:
+    title: str
+    summary: str
+    topics: list[str] = field(default_factory=list)
+    key_points: list[str] = field(default_factory=list)
+    confidence: str = "baixa"
+    uncertainty_notes: str = ""
+
+
+def process_class_transcript(text: str, api_key: str, model: str) -> ProcessedClass:
+    data = call_structured_tool(
+        system_prompt=CLASS_SYSTEM_PROMPT,
+        tool_schema=CLASS_TOOL_SCHEMA,
+        user_content=f"Transcricao da aula:\n\n{text}",
+        api_key=api_key,
+        model=model,
+    )
+    return ProcessedClass(
+        title=data["title"],
+        summary=data["summary"],
+        topics=data.get("topics", []),
+        key_points=data.get("key_points", []),
         confidence=data.get("confidence", "baixa"),
         uncertainty_notes=data.get("uncertainty_notes", ""),
     )
