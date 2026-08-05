@@ -39,7 +39,7 @@ vault_inbox_dir: "C:\\Users\\Hellena\\ObsidianVault\\Inbox\\Voz"
 data_dir: "data"
 whisper_model: "small"
 whisper_language: "pt"
-whisper_initial_prompt: "Hellena, We Founders, Ravi."
+whisper_initial_prompt: "Hellena, We Founders, Ravi, Yá."
 anthropic_model: "claude-sonnet-5"
 audio_retention_days: 30
 
@@ -66,6 +66,14 @@ persistir bastante (principalmente em trechos inteiros em inglês), o
 próximo passo é trocar `whisper_model` de `"small"` para `"medium"` — mais
 lento na CPU, mas sensivelmente melhor em nomes próprios e troca de idioma
 no meio da fala.
+
+Limite importante do `initial_prompt`: ele influencia a grafia, não o
+significado. Um nome curto que soa igual a uma palavra comum (ex: "Yá" e
+"IA") continua ambíguo pro Whisper mesmo com o prompt, porque a diferença
+não está no som, e sim em quem está falando de quem — isso o modelo de
+transcrição não tem como saber. Nesses casos a transcrição bruta pode sair
+"IA" onde era "Yá" (ou o contrário) mesmo com o termo na lista; revise à
+mão quando o contexto permitir.
 
 Edite `.env` com sua chave da Claude API (crie em
 [console.anthropic.com](https://console.anthropic.com)):

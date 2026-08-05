@@ -24,7 +24,7 @@ whisper_language: "pt"
 # grafia nesses termos especificos (nao cria nem inventa palavras que nao
 # foram ditas). Escreva como uma frase normal, com os termos exatamente
 # como devem aparecer:
-whisper_initial_prompt: "Hellena, We Founders, Ravi."
+whisper_initial_prompt: "Hellena, We Founders, Ravi, Yá."
 
 # Modelo da Claude API usado para sintese/classificacao (so texto e enviado).
 anthropic_model: "claude-sonnet-5"
