@@ -164,6 +164,26 @@ Depois de validar, registre o listener para iniciar com o Windows:
 A partir do próximo login, os três atalhos ficam ativos automaticamente, sem
 precisar abrir nada.
 
+### Problema conhecido: erro ao gravar sem mensagem clara (`AssertionError`)
+
+Se ao apertar o atalho pra parar aparecer um erro na gravação (ou uma
+notificação "Erro na gravação" praticamente vazia), o motivo mais comum é o
+driver do microfone (ou da saída de áudio padrão, no modo Reunião/Terapia)
+não usar o formato de áudio que a biblioteca de captura espera
+(`WAVEFORMATEXTENSIBLE`). Isso é uma característica do driver/dispositivo,
+não um bug do código.
+
+Correção, no Windows:
+1. Painel de Controle → **Som** → aba **Gravação** (ou **Reprodução**, se o
+   erro for no modo Reunião/Terapia).
+2. Clique com o botão direito no dispositivo padrão → **Propriedades** →
+   aba **Avançado**.
+3. Troque **"Formato Padrão"** para uma opção comum, tipo *"2 canais, 16
+   bits, 48000 Hz (Qualidade DVD)"* — evite as opções de "Estúdio"/alta
+   resolução, que costumam ser as que causam esse erro.
+4. **Aplicar** → **OK**, feche o listener (ícone da bandeja → Sair) e abra
+   de novo.
+
 ## 7. Comandos úteis
 
 ```powershell

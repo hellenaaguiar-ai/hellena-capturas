@@ -47,6 +47,24 @@ def _com_initialized():
         ole32.CoUninitialize()
 
 
+def _mix_format_error(device_label: str) -> RuntimeError:
+    """A biblioteca soundcard assume que o formato de audio nativo do
+    dispositivo padrao do Windows e WAVEFORMATEXTENSIBLE - alguns
+    drivers/dispositivos relatam outro formato e isso derruba a gravacao
+    com um AssertionError sem mensagem nenhuma. Troca por um erro com a
+    causa e a correcao (mexer no formato padrao do dispositivo no Painel
+    de Controle do Windows), em vez de um traceback opaco."""
+    return RuntimeError(
+        f"O driver do {device_label} não está no formato que a captura de áudio "
+        "espera (WAVEFORMATEXTENSIBLE). Correção: Painel de Controle > Som > "
+        "aba Gravação (ou Reprodução, se for a saída) > clique com o botão "
+        "direito no dispositivo padrão > Propriedades > aba Avançado > troque "
+        "'Formato Padrão' para uma opção comum tipo '2 canais, 16 bits, "
+        "48000 Hz (Qualidade DVD)' em vez de uma opção de alta resolução/"
+        "estúdio > Aplicar > OK. Depois feche e abra o listener de novo."
+    )
+
+
 class RecordingSession:
     """Grava microfone e, se configurado, a trilha de loopback do sistema,
     em threads separadas, ate stop() ser chamado."""
@@ -77,6 +95,8 @@ class RecordingSession:
                 with mic.recorder(samplerate=SAMPLE_RATE, channels=CHANNELS) as recorder:
                     while not self._stop_event.is_set():
                         self._mic_frames.append(recorder.record(numframes=CHUNK_FRAMES))
+            except AssertionError:
+                self._error = _mix_format_error("microfone padrão")
             except Exception as exc:  # noqa: BLE001
                 self._error = exc
 
@@ -91,6 +111,8 @@ class RecordingSession:
                 with loopback.recorder(samplerate=SAMPLE_RATE, channels=CHANNELS) as recorder:
                     while not self._stop_event.is_set():
                         self._system_frames.append(recorder.record(numframes=CHUNK_FRAMES))
+            except AssertionError:
+                self._error = _mix_format_error("saída de áudio padrão (loopback)")
             except Exception as exc:  # noqa: BLE001
                 self._error = exc
 
