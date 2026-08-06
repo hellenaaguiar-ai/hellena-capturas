@@ -140,12 +140,18 @@ e teste rodando o listener em primeiro plano, num terminal:
 python -m voice_capture.listener
 ```
 
-Aperte `Ctrl+Alt+I` (modo ideia), fale, aperte de novo — deve aparecer uma
-janelinha vermelha no canto da tela enquanto grava, e uma notificação
-"Captura concluída" ao terminar. Teste também `Ctrl+Alt+R` (reunião) com
-algum áudio tocando no computador (ex: um vídeo), para confirmar que a
-trilha de sistema está sendo capturada. `Ctrl+Alt+A` (aula) usa a mesma
-trilha de sistema, só que sem microfone.
+Assim que o listener terminar de subir, aparece uma janelinha pequena e
+discreta no canto inferior direito da tela ("🎙️ Hellena Capturas —
+ouvindo") — fica ali o tempo todo, confirmando que ele está rodando, sem
+precisar abrir a bandeja do sistema pra saber.
+
+Aperte `Ctrl+Alt+I` (modo ideia), fale, aperte de novo — a mesma janelinha
+cresce e fica vermelha enquanto grava, e uma notificação "Captura
+concluída" aparece ao terminar (a janelinha volta ao estado discreto, não
+some de vez). Teste também `Ctrl+Alt+R` (reunião) com algum áudio tocando
+no computador (ex: um vídeo), para confirmar que a trilha de sistema está
+sendo capturada. `Ctrl+Alt+A` (aula) usa a mesma trilha de sistema, só que
+sem microfone.
 
 Um ícone azul aparece na bandeja do sistema (perto do relógio) assim que o
 listener inicia — fica vermelho enquanto uma gravação está em andamento.

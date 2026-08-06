@@ -22,7 +22,7 @@ from . import pipeline
 from .config import Config, load_config
 from .desktop import modes as modes_module
 from .desktop.audio_capture import RecordingSession, start_capture
-from .desktop.indicator import RecordingIndicator
+from .desktop.indicator import RecordingIndicator, close_badge, show_idle_badge
 from .desktop.modes import CaptureMode, NOTE_TYPE_IDEA
 from .desktop.tray import TrayIcon
 from .desktop_pipeline import process_desktop_recording
@@ -192,6 +192,7 @@ def main() -> None:
     logging.info("Atalho 'Parar' (qualquer modo) registrado em %s", stop_hotkey)
 
     logging.info("Listener ativo. Use o icone na bandeja do sistema para encerrar.")
+    show_idle_badge()  # badge discreto e permanente no canto da tela, confirmando que esta rodando
 
     # keyboard.wait() bloqueia para sempre - roda em segundo plano para o
     # icone da bandeja poder ocupar a thread principal (necessario para
@@ -200,6 +201,7 @@ def main() -> None:
 
     _tray_icon = TrayIcon()
     _tray_icon.run()  # bloqueia ate clicar em "Sair" no menu do icone
+    close_badge()
     logging.info("Encerrado pelo icone da bandeja.")
 
 
