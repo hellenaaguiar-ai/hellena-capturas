@@ -5,6 +5,7 @@ from voice_capture.desktop.audio_capture import (
     _default_input_device,
     _default_loopback_device,
     _wasapi_hostapi_index,
+    _wasapi_loopback_settings,
     _write_wav,
 )
 
@@ -14,9 +15,10 @@ class FakeSoundDevice:
     permitindo testar a logica de selecao de dispositivo sem hardware real
     nem rodar em Windows."""
 
-    def __init__(self, hostapis, devices=None):
+    def __init__(self, hostapis, devices=None, wasapi_settings_supports_loopback=True):
         self._hostapis = hostapis
         self._devices = devices or {}
+        self._wasapi_settings_supports_loopback = wasapi_settings_supports_loopback
 
     def query_hostapis(self, index=None):
         if index is None:
@@ -25,6 +27,11 @@ class FakeSoundDevice:
 
     def query_devices(self, index):
         return self._devices[index]
+
+    def WasapiSettings(self, loopback=False):
+        if loopback and not self._wasapi_settings_supports_loopback:
+            raise TypeError("WasapiSettings.__init__() got an unexpected keyword argument 'loopback'")
+        return {"loopback": loopback}
 
 
 def test_wasapi_hostapi_index_found():
@@ -61,6 +68,17 @@ def test_default_loopback_device_none_configured_raises_clear_error():
     sd = FakeSoundDevice([{"name": "Windows WASAPI", "default_output_device": -1}])
     with pytest.raises(RuntimeError, match="saida"):
         _default_loopback_device(sd)
+
+
+def test_wasapi_loopback_settings_ok_on_supported_version():
+    sd = FakeSoundDevice([], wasapi_settings_supports_loopback=True)
+    assert _wasapi_loopback_settings(sd) == {"loopback": True}
+
+
+def test_wasapi_loopback_settings_raises_clear_error_on_old_sounddevice():
+    sd = FakeSoundDevice([], wasapi_settings_supports_loopback=False)
+    with pytest.raises(RuntimeError, match="atualize|Atualize"):
+        _wasapi_loopback_settings(sd)
 
 
 def test_write_wav_mixes_multi_channel_down_to_mono(tmp_path):

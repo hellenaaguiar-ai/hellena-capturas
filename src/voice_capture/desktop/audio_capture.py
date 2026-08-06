@@ -65,6 +65,23 @@ def _default_loopback_device(sd) -> tuple[int, int]:
     return device_index, channels
 
 
+def _wasapi_loopback_settings(sd):
+    """WasapiSettings(loopback=True) so existe em versoes mais novas do
+    sounddevice - versoes antigas nao tem esse parametro e derrubam a
+    gravacao com um TypeError sem contexto nenhum."""
+    try:
+        return sd.WasapiSettings(loopback=True)
+    except TypeError as exc:
+        raise RuntimeError(
+            "Sua versao instalada do sounddevice nao suporta gravacao do "
+            "audio do sistema (loopback) - falta o parametro loopback em "
+            "WasapiSettings. Atualize com: "
+            '.venv\\Scripts\\pip install --upgrade "sounddevice>=0.4.6" '
+            "e abra o listener de novo. O modo Ideia (so microfone) nao e "
+            "afetado por isso."
+        ) from exc
+
+
 class RecordingSession:
     """Grava, cada uma se configurada, a trilha do microfone e/ou a trilha
     de loopback do sistema, em threads separadas, ate stop() ser chamado.
@@ -110,7 +127,7 @@ class RecordingSession:
             import sounddevice as sd
 
             device_index, device_channels = _default_loopback_device(sd)
-            extra_settings = sd.WasapiSettings(loopback=True)
+            extra_settings = _wasapi_loopback_settings(sd)
             with sd.InputStream(
                 samplerate=SAMPLE_RATE,
                 channels=device_channels,
