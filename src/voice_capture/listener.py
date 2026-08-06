@@ -22,7 +22,7 @@ from . import pipeline
 from .config import Config, load_config
 from .desktop import modes as modes_module
 from .desktop.audio_capture import RecordingSession, start_capture
-from .desktop.indicator import RecordingIndicator, close_badge, show_idle_badge
+from .desktop.indicator import RecordingIndicator, close_badge
 from .desktop.modes import CaptureMode, NOTE_TYPE_IDEA
 from .desktop.tray import TrayIcon
 from .desktop_pipeline import process_desktop_recording
@@ -61,27 +61,40 @@ def _paths_for(config: Config, mode: CaptureMode, timestamp: str) -> tuple[Optio
     return mic_path, system_path
 
 
-def _process_in_background(config: Config, mode: CaptureMode, mic_path: Optional[Path], system_path: Optional[Path], recorded_at: datetime) -> None:
-    with _pipeline_lock:
-        state = StateStore(config.state_file)
-        try:
-            if mode.note_type == NOTE_TYPE_IDEA:
-                result = pipeline.process_item(mic_path, config, state)
+def _process_in_background(
+    config: Config,
+    mode: CaptureMode,
+    mic_path: Optional[Path],
+    system_path: Optional[Path],
+    recorded_at: datetime,
+    indicator: RecordingIndicator,
+) -> None:
+    try:
+        with _pipeline_lock:
+            state = StateStore(config.state_file)
+            try:
+                if mode.note_type == NOTE_TYPE_IDEA:
+                    result = pipeline.process_item(mic_path, config, state)
+                else:
+                    result = process_desktop_recording(mode, mic_path, system_path, recorded_at, config, state)
+            except Exception as exc:  # noqa: BLE001
+                logging.exception("Falha inesperada processando modo %s", mode.key)
+                _notify("Erro na captura", f"{mode.label}: {exc}")
+                return
+
+            write_errors_note(config.error_note_path, state.errors())
+
+            if result == "done":
+                _notify("Captura concluída", f"{mode.label} processado e salvo no Obsidian.")
+            elif result == "skipped-duplicate":
+                logging.info("Gravacao de %s ja processada (duplicada)", mode.key)
             else:
-                result = process_desktop_recording(mode, mic_path, system_path, recorded_at, config, state)
-        except Exception as exc:  # noqa: BLE001
-            logging.exception("Falha inesperada processando modo %s", mode.key)
-            _notify("Erro na captura", f"{mode.label}: {exc}")
-            return
-
-        write_errors_note(config.error_note_path, state.errors())
-
-        if result == "done":
-            _notify("Captura concluída", f"{mode.label} processado e salvo no Obsidian.")
-        elif result == "skipped-duplicate":
-            logging.info("Gravacao de %s ja processada (duplicada)", mode.key)
-        else:
-            _notify("Falha na captura", f"{mode.label} falhou — veja _Erros de captura.md no vault.")
+                _notify("Falha na captura", f"{mode.label} falhou — veja _Erros de captura.md no vault.")
+    finally:
+        # So esconde o indicador quando TUDO (transcricao + IA + nota) de
+        # fato terminou - sucesso, duplicata ou erro. Enquanto isso, fica
+        # visivel em "Processando", pra nao parecer que sumiu no vazio.
+        indicator.hide()
 
 
 def _safe_toggle(config: Config, mode: CaptureMode) -> None:
@@ -99,19 +112,20 @@ def _stop_mode(config: Config, mode: CaptureMode) -> None:
     """Encerra a gravacao ativa do modo indicado e dispara o processamento
     em segundo plano. Assume que mode.key esta em _active_sessions."""
     session, recorded_at, indicator = _active_sessions.pop(mode.key)
-    indicator.stop()
+    indicator.set_processing()
     _update_tray_state()
     try:
         mic_path, system_path = session.stop()
     except Exception as exc:  # noqa: BLE001
         logging.exception("Falha ao parar gravacao do modo %s", mode.key)
         _notify("Erro na gravação", f"{mode.label}: {exc}")
+        indicator.hide()
         return
 
     _notify("Processando...", f"{mode.label} — transcrevendo e estruturando.")
     thread = threading.Thread(
         target=_process_in_background,
-        args=(config, mode, mic_path, system_path, recorded_at),
+        args=(config, mode, mic_path, system_path, recorded_at, indicator),
         daemon=True,
     )
     thread.start()
@@ -158,7 +172,7 @@ def _toggle(config: Config, mode: CaptureMode) -> None:
         _notify("Erro ao gravar", f"{mode.label}: {exc}")
         return
 
-    indicator = RecordingIndicator(f"🔴 Gravando — {mode.label}")
+    indicator = RecordingIndicator(mode.label)
     indicator.start()
     _active_sessions[mode.key] = (session, datetime.now().astimezone(), indicator)
     _update_tray_state()
@@ -192,7 +206,6 @@ def main() -> None:
     logging.info("Atalho 'Parar' (qualquer modo) registrado em %s", stop_hotkey)
 
     logging.info("Listener ativo. Use o icone na bandeja do sistema para encerrar.")
-    show_idle_badge()  # badge discreto e permanente no canto da tela, confirmando que esta rodando
 
     # keyboard.wait() bloqueia para sempre - roda em segundo plano para o
     # icone da bandeja poder ocupar a thread principal (necessario para

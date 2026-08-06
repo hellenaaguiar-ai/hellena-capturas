@@ -1,9 +1,8 @@
-"""Indicador visual persistente: um badge pequeno, sem borda, sempre no
-topo, no canto da tela - fica visivel o tempo todo enquanto o listener
-esta rodando (nao so durante gravacao), pra voce saber de relance que ele
-esta ativo sem precisar abrir a bandeja do sistema. Durante uma gravacao,
-o mesmo badge cresce e fica vermelho; ao parar, volta ao estado discreto
-(nunca some de vez enquanto o listener estiver de pe).
+"""Indicador visual de atividade: uma janela pequena, sem borda, sempre no
+topo, no canto da tela. So aparece quando tem algo de fato acontecendo -
+gravando (vermelho) ou processando/transcrevendo (laranja) - e some
+sozinha assim que termina. Fica escondida o resto do tempo, pra nao virar
+poluicao visual permanente.
 
 Cria UM UNICO Tk() e roda o mainloop dele numa UNICA thread dedicada, viva
 por todo o tempo de vida do listener - cada gravacao so manda um comando
@@ -21,11 +20,10 @@ import queue
 import threading
 from typing import Optional
 
-IDLE_TEXT = "🎙️ Hellena Capturas — ouvindo"
-IDLE_STYLE = {"bg": "#34495e", "font": ("Segoe UI", 9), "padx": 10, "pady": 5}
-ACTIVE_STYLE = {"bg": "#c0392b", "font": ("Segoe UI", 11, "bold"), "padx": 16, "pady": 8}
+RECORDING_STYLE = {"bg": "#c0392b", "font": ("Segoe UI", 11, "bold"), "padx": 16, "pady": 8}
+PROCESSING_STYLE = {"bg": "#d68910", "font": ("Segoe UI", 11, "bold"), "padx": 16, "pady": 8}
 
-_command_queue: "queue.Queue[tuple[str, str]]" = queue.Queue()
+_command_queue: "queue.Queue[tuple[str, dict, str]]" = queue.Queue()
 _gui_thread: Optional[threading.Thread] = None
 _gui_thread_lock = threading.Lock()
 
@@ -42,14 +40,15 @@ def _run_gui() -> None:
     import tkinter as tk
 
     root = tk.Tk()
+    root.withdraw()  # comeca escondida - so aparece quando tiver algo acontecendo
     root.overrideredirect(True)
     root.attributes("-topmost", True)
     try:
-        root.attributes("-alpha", 0.90)
+        root.attributes("-alpha", 0.92)
     except Exception:  # noqa: BLE001 - alpha nem sempre suportado, nao e critico
         pass
 
-    label = tk.Label(root, text=IDLE_TEXT, fg="white", **IDLE_STYLE)
+    label = tk.Label(root, fg="white")
     label.pack()
 
     def reposition() -> None:
@@ -60,25 +59,16 @@ def _run_gui() -> None:
         y = screen_h - height - 60
         root.geometry(f"{width}x{height}+{x}+{y}")
 
-    def set_idle() -> None:
-        label.config(text=IDLE_TEXT, **IDLE_STYLE)
-        reposition()
-
-    def set_active(text: str) -> None:
-        label.config(text=text, **ACTIVE_STYLE)
-        reposition()
-
-    set_idle()
-    root.deiconify()  # ja comeca visivel - o listener esta rodando desde ja
-
     def poll_queue() -> None:
         try:
             while True:
-                action, text = _command_queue.get_nowait()
-                if action == "active":
-                    set_active(text)
-                elif action == "idle":
-                    set_idle()
+                action, style, text = _command_queue.get_nowait()
+                if action == "show":
+                    label.config(text=text, **style)
+                    reposition()
+                    root.deiconify()
+                elif action == "hide":
+                    root.withdraw()
                 elif action == "close":
                     root.destroy()
                     return
@@ -90,31 +80,26 @@ def _run_gui() -> None:
     root.mainloop()
 
 
-def show_idle_badge() -> None:
-    """Chame uma vez, quando o listener terminar de registrar os atalhos -
-    deixa visivel um badge pequeno e discreto confirmando que ele esta
-    rodando, sem precisar abrir a bandeja do sistema pra saber."""
-    _ensure_gui_thread()
-    _command_queue.put(("idle", ""))
-
-
 def close_badge() -> None:
     """Chame ao encerrar o listener - fecha a janela de vez."""
-    _command_queue.put(("close", ""))
+    _command_queue.put(("close", {}, ""))
 
 
 class RecordingIndicator:
-    """Uma gravacao chama start()/stop() - por baixo, so manda um comando
-    pra fila da janela unica (thread-safe), nunca mexe no Tk diretamente.
-    stop() nao esconde o badge, so devolve ele ao estado discreto (idle) -
-    o listener continua "visivelmente" rodando."""
+    """Uma gravacao chama start() -> set_processing() -> hide(), na ordem -
+    por baixo, so manda comandos pra fila da janela unica (thread-safe),
+    nunca mexe no Tk diretamente."""
 
-    def __init__(self, text: str):
-        self._text = text
+    def __init__(self, label: str):
+        self._label = label
 
     def start(self) -> None:
         _ensure_gui_thread()
-        _command_queue.put(("active", self._text))
+        _command_queue.put(("show", RECORDING_STYLE, f"🔴 Gravando — {self._label}"))
 
-    def stop(self) -> None:
-        _command_queue.put(("idle", ""))
+    def set_processing(self) -> None:
+        _ensure_gui_thread()
+        _command_queue.put(("show", PROCESSING_STYLE, f"⏳ Processando — {self._label}"))
+
+    def hide(self) -> None:
+        _command_queue.put(("hide", {}, ""))
