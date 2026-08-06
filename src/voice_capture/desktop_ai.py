@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .ai_client import call_structured_tool
+from .ai_client import call_structured_tool, coerce_str_list
 
 CONFIDENCE_LEVELS = ["baixa", "media", "alta"]
 
@@ -105,10 +105,10 @@ def process_meeting_transcript(labeled_text: str, api_key: str, model: str) -> P
     return ProcessedMeeting(
         title=data["title"],
         summary=data["summary"],
-        decisions=data.get("decisions", []),
-        action_items=data.get("action_items", []),
-        participants_mentioned=data.get("participants_mentioned", []),
-        open_questions=data.get("open_questions", []),
+        decisions=coerce_str_list(data.get("decisions", [])),
+        action_items=coerce_str_list(data.get("action_items", [])),
+        participants_mentioned=coerce_str_list(data.get("participants_mentioned", [])),
+        open_questions=coerce_str_list(data.get("open_questions", [])),
         confidence=data.get("confidence", "baixa"),
         uncertainty_notes=data.get("uncertainty_notes", ""),
     )
@@ -195,9 +195,9 @@ def process_therapy_transcript(labeled_text: str, api_key: str, model: str) -> P
     return ProcessedTherapy(
         title=data["title"],
         session_summary=data["session_summary"],
-        themes=data.get("themes", []),
-        insights=data.get("insights", []),
-        follow_ups=data.get("follow_ups", []),
+        themes=coerce_str_list(data.get("themes", [])),
+        insights=coerce_str_list(data.get("insights", [])),
+        follow_ups=coerce_str_list(data.get("follow_ups", [])),
         confidence=data.get("confidence", "baixa"),
         uncertainty_notes=data.get("uncertainty_notes", ""),
     )
@@ -261,8 +261,8 @@ def process_class_transcript(text: str, api_key: str, model: str) -> ProcessedCl
     return ProcessedClass(
         title=data["title"],
         summary=data["summary"],
-        topics=data.get("topics", []),
-        key_points=data.get("key_points", []),
+        topics=coerce_str_list(data.get("topics", [])),
+        key_points=coerce_str_list(data.get("key_points", [])),
         confidence=data.get("confidence", "baixa"),
         uncertainty_notes=data.get("uncertainty_notes", ""),
     )

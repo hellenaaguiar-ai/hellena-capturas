@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .ai_client import call_structured_tool
+from .ai_client import call_structured_tool, coerce_str_list
 
 POSSIBLE_USES = [
     "Second Brain",
@@ -169,12 +169,12 @@ def process_transcript(raw_text: str, api_key: str, model: str) -> ProcessedCapt
         title=data["title"],
         synthesis=data["synthesis"],
         cleaned_transcript=data["cleaned_transcript"],
-        entities=data.get("entities", []),
-        evidence_and_connections=data.get("evidence_and_connections", []),
-        open_questions=data.get("open_questions", []),
-        possible_uses=data.get("possible_uses", []),
+        entities=coerce_str_list(data.get("entities", [])),
+        evidence_and_connections=coerce_str_list(data.get("evidence_and_connections", [])),
+        open_questions=coerce_str_list(data.get("open_questions", [])),
+        possible_uses=coerce_str_list(data.get("possible_uses", [])),
         classification=data.get("classification", "indefinido"),
         confidence=data.get("confidence", "baixa"),
-        related_topics=data.get("related_topics", []),
+        related_topics=coerce_str_list(data.get("related_topics", [])),
         uncertainty_notes=data.get("uncertainty_notes", ""),
     )
