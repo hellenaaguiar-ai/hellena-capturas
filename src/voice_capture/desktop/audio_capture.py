@@ -98,8 +98,21 @@ class RecordingSession:
         self._mic_format: tuple[int, int] = (1, SAMPLE_RATE)  # (canais, taxa)
         self._system_format: tuple[int, int] = (2, SAMPLE_RATE)
         self._error: Optional[Exception] = None
+        self._pyaudio = None  # criado em start(), uma unica vez - ver comentario la
 
     def start(self) -> None:
+        import pyaudiowpatch as pyaudio
+
+        # PyAudio() chama Pa_Initialize() por baixo, o que nao e seguro pra
+        # chamar de duas threads ao mesmo tempo - quando Reuniao/Terapia/Aula
+        # abriam mic e sistema em paralelo, cada thread criava sua propria
+        # instancia simultaneamente e o processo caia sem nenhum traceback
+        # (crash nativo, nao uma excecao Python). Criar uma unica instancia
+        # aqui, antes de qualquer thread comecar, e passar ela pras duas
+        # evita a corrida - abrir streams em dispositivos diferentes a partir
+        # dessa mesma instancia, de threads diferentes, e seguro.
+        self._pyaudio = pyaudio.PyAudio()
+
         if self.mic_path is not None:
             self._threads.append(threading.Thread(target=self._run_mic, daemon=True))
         if self.system_path is not None:
@@ -107,10 +120,10 @@ class RecordingSession:
         for t in self._threads:
             t.start()
 
-    def _record(self, device_info: dict, frames: list[bytes], pyaudio, p) -> tuple[int, int]:
+    def _record(self, device_info: dict, frames: list[bytes], pyaudio) -> tuple[int, int]:
         channels = int(device_info["maxInputChannels"]) or 1
         rate = int(device_info["defaultSampleRate"]) or SAMPLE_RATE
-        stream = p.open(
+        stream = self._pyaudio.open(
             format=pyaudio.paInt16,
             channels=channels,
             rate=rate,
@@ -130,9 +143,8 @@ class RecordingSession:
         try:
             import pyaudiowpatch as pyaudio
 
-            with pyaudio.PyAudio() as p:
-                device_info = _default_mic_device(pyaudio, p)
-                self._mic_format = self._record(device_info, self._mic_frames, pyaudio, p)
+            device_info = _default_mic_device(pyaudio, self._pyaudio)
+            self._mic_format = self._record(device_info, self._mic_frames, pyaudio)
         except Exception as exc:  # noqa: BLE001
             self._error = exc
 
@@ -140,9 +152,8 @@ class RecordingSession:
         try:
             import pyaudiowpatch as pyaudio
 
-            with pyaudio.PyAudio() as p:
-                device_info = _default_loopback_device(pyaudio, p)
-                self._system_format = self._record(device_info, self._system_frames, pyaudio, p)
+            device_info = _default_loopback_device(pyaudio, self._pyaudio)
+            self._system_format = self._record(device_info, self._system_frames, pyaudio)
         except Exception as exc:  # noqa: BLE001
             self._error = exc
 
@@ -150,6 +161,8 @@ class RecordingSession:
         self._stop_event.set()
         for t in self._threads:
             t.join(timeout=5)
+        if self._pyaudio is not None:
+            self._pyaudio.terminate()
         if self._error is not None:
             raise self._error
 
