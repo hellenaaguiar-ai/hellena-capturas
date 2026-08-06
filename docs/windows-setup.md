@@ -176,10 +176,11 @@ sem mensagem — nenhuma configuração do Windows (nem trocar o "Formato
 Padrão" em Painel de Controle → Som) resolvia, porque é uma característica
 do driver, não algo configurável.
 
-A partir desta versão o projeto usa `sounddevice` (PortAudio) em vez de
-`soundcard`, que não tem essa limitação. Se você via esse erro antes, dê
-`git pull`, reinstale a dependência nova (`pip install -e .[desktop]`) e
-teste de novo — não deve precisar mexer em nada no Windows.
+O projeto usa `PyAudioWPatch` (fork do PyAudio com patch de loopback
+WASAPI) em vez de `soundcard`, que não tem essa limitação. Se você via
+esse erro antes, dê `git pull`, reinstale a dependência nova
+(`pip install -e .[desktop]`) e teste de novo — não deve precisar mexer em
+nada no Windows.
 
 Se ainda assim der erro na gravação, a mensagem agora deve vir com a causa
 real (dispositivo não encontrado, etc.) em vez de um `AssertionError` em

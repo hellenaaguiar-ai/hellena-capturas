@@ -46,13 +46,22 @@ simples (sem combinações complexas nem necessidade de suprimir o
 comportamento padrão da tecla), `keyboard` é suficiente e mantém tudo num
 único stack (Python).
 
-### 2. Captura dupla de áudio — `sounddevice` (WASAPI loopback)
+### 2. Captura dupla de áudio — `PyAudioWPatch` (WASAPI loopback)
 
-(Trocamos de `soundcard` para `sounddevice`/PortAudio depois de um bug real
-em produção: `soundcard` assume que todo driver de áudio do Windows relata
-o formato `WAVEFORMATEXTENSIBLE`, e em drivers que não relatam isso a
-gravação falhava com um erro sem mensagem nenhuma configuração do Windows
-resolvia. `sounddevice` negocia o formato de forma mais tolerante.)
+Duas trocas de biblioteca até chegar aqui, cada uma por um bug real batido
+em produção:
+1. `soundcard` — assume que todo driver de áudio do Windows relata o
+   formato `WAVEFORMATEXTENSIBLE`; em drivers que não relatam isso a
+   gravação falhava com um erro sem mensagem, sem nenhuma configuração do
+   Windows resolvendo.
+2. `sounddevice` — resolveu o problema acima, mas seu `WasapiSettings`
+   nunca teve (em nenhuma versão) suporte a loopback de verdade. Isso foi
+   uma suposição errada da minha parte, não uma limitação de versão —
+   confirmado depois consultando a documentação oficial do projeto.
+3. **`PyAudioWPatch`** (atual) — fork do PyAudio com um PortAudio compilado
+   com patch específico pra expor dispositivos de loopback WASAPI de
+   verdade (o mesmo mecanismo que o Audacity usa). Documentado e usado
+   especificamente para este caso.
 
 Reunião e terapia gravam **duas trilhas separadas** ao mesmo tempo:
 - microfone (sua voz)

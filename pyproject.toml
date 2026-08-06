@@ -16,10 +16,9 @@ dependencies = [
 
 [project.optional-dependencies]
 desktop = [
-    "sounddevice>=0.4.6",
+    "pyaudiowpatch>=0.2.12.6",
     "keyboard>=0.13.5",
     "plyer>=2.1.0",
-    "numpy>=1.24",
     "pystray>=0.19.5",
     "Pillow>=10.0.0",
 ]

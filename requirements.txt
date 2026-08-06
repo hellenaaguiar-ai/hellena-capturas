@@ -5,9 +5,8 @@ python-dotenv>=1.0.0
 pytest>=8.0.0
 
 # Captura no desktop (atalho global + audio mic/sistema) - Windows
-sounddevice>=0.4.6; sys_platform == "win32"
+pyaudiowpatch>=0.2.12.6; sys_platform == "win32"
 keyboard>=0.13.5; sys_platform == "win32"
 plyer>=2.1.0; sys_platform == "win32"
 pystray>=0.19.5; sys_platform == "win32"
 Pillow>=10.0.0; sys_platform == "win32"
-numpy>=1.24

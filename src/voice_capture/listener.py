@@ -177,10 +177,10 @@ def main() -> None:
 
     import keyboard
 
-    # Importa o sounddevice uma unica vez aqui, nesta thread, ANTES de
+    # Importa o pyaudiowpatch uma unica vez aqui, nesta thread, ANTES de
     # qualquer gravacao - evita que duas threads de gravacao (mic + sistema)
     # inicializem o PortAudio pela primeira vez ao mesmo tempo.
-    import sounddevice  # noqa: F401
+    import pyaudiowpatch  # noqa: F401
 
     active_modes = modes_module.build_modes(config)
     for mode in active_modes:
