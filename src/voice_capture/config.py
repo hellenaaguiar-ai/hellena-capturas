@@ -12,21 +12,20 @@ DEFAULT_CONFIG_PATH = Path("config.yaml")
 
 DEFAULT_HOTKEYS = {
     "idea": "ctrl+space",
-    "meeting": "ctrl+alt+r",
-    "therapy": "ctrl+alt+t",
-    "class": "ctrl+alt+a",
-    "stop": "ctrl+alt+p",
+    # Caps Lock+letra por pedido explicito (mais facil de lembrar/alcancar
+    # que Ctrl+Alt+letra). listener.py registra esses hotkeys com
+    # suppress=True especificamente por causa deles - isso bloqueia o
+    # evento na origem, o que deve evitar o efeito colateral de ligar/
+    # desligar o Caps Lock de verdade (nao pode ser testado neste
+    # ambiente, so num Windows real).
+    "meeting": "caps lock+r",
+    "therapy": "caps lock+t",
+    "class": "caps lock+a",
+    "stop": "caps lock+p",
     # Atalho extra pro MESMO modo "idea" (mesma pasta, mesmo processamento -
     # a IA ja classifica reflexao/desabafo/mudanca de pensamento
     # automaticamente). So um segundo jeito de acionar, pra separar na
-    # cabeca "tive uma ideia" de "preciso desabafar/refletir". Nao pode
-    # conter ctrl+space junto (colidiria com o atalho "idea" - a biblioteca
-    # de atalhos dispara os dois juntos nesse caso).
-    # Usa Caps Lock por pedido explicito - efeito colateral conhecido: o
-    # Windows pode ligar/desligar o Caps Lock de verdade ao apertar essa
-    # combinacao (isso e o sistema operacional reagindo a tecla fisica, a
-    # biblioteca de atalhos nao consegue suprimir isso). Se incomodar,
-    # trocar aqui (ou no config.yaml) para algo como "ctrl+alt+d" resolve.
+    # cabeca "tive uma ideia" de "preciso desabafar/refletir".
     "reflection": "caps lock+d",
 }
 

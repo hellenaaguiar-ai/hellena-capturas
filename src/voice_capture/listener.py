@@ -207,13 +207,19 @@ def main() -> None:
     # inicializem o PortAudio pela primeira vez ao mesmo tempo.
     import pyaudiowpatch  # noqa: F401
 
+    # suppress=True bloqueia a tecla na origem (nao deixa vazar pro
+    # aplicativo que estiver em foco nem pro resto do Windows) - alem de
+    # evitar side-effects tipo o Caps Lock ligando/desligando sozinho nos
+    # atalhos que usam ele, tambem impede que o Ctrl+Espaco "vaze" pra
+    # dentro de outro programa (ex: autocompletar do VS Code) enquanto o
+    # listener esta rodando.
     active_modes = modes_module.build_modes(config)
     for mode in active_modes:
-        keyboard.add_hotkey(mode.hotkey, lambda m=mode: _safe_toggle(config, m))
+        keyboard.add_hotkey(mode.hotkey, lambda m=mode: _safe_toggle(config, m), suppress=True)
         logging.info("Modo '%s' registrado em %s -> %s", mode.label, mode.hotkey, mode.vault_dir)
 
     stop_hotkey = config.hotkeys["stop"]
-    keyboard.add_hotkey(stop_hotkey, lambda: _safe_stop_any(config))
+    keyboard.add_hotkey(stop_hotkey, lambda: _safe_stop_any(config), suppress=True)
     logging.info("Atalho 'Parar' (qualquer modo) registrado em %s", stop_hotkey)
 
     # Atalho extra pro MESMO modo "idea" (mesmo mode.key, mesma pasta,
@@ -223,7 +229,7 @@ def main() -> None:
     idea_mode = next((m for m in active_modes if m.key == "idea"), None)
     reflection_hotkey = config.hotkeys.get("reflection")
     if idea_mode is not None and reflection_hotkey:
-        keyboard.add_hotkey(reflection_hotkey, lambda: _safe_toggle(config, idea_mode))
+        keyboard.add_hotkey(reflection_hotkey, lambda: _safe_toggle(config, idea_mode), suppress=True)
         logging.info("Atalho alternativo para '%s' (reflexão/desabafo) registrado em %s", idea_mode.label, reflection_hotkey)
 
     logging.info("Listener ativo. Use o icone na bandeja do sistema para encerrar.")

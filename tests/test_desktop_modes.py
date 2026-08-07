@@ -55,4 +55,4 @@ def test_default_hotkeys(tmp_path):
     assert idea.hotkey == "ctrl+space"
 
     class_mode = get_mode(config, "class")
-    assert class_mode.hotkey == "ctrl+alt+a"
+    assert class_mode.hotkey == "caps lock+a"

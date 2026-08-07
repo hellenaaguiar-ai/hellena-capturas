@@ -29,7 +29,7 @@ pede, também o áudio do sistema (para separar "você" de "outra pessoa" sem
 diarização) — o modo aula grava só o áudio do sistema, sem microfone:
 
 ```
-Ctrl+Espaço / Ctrl+Alt+R / Ctrl+Alt+T / Ctrl+Alt+A
+Ctrl+Espaço / Caps Lock+R / Caps Lock+T / Caps Lock+A
   → grava mic (+ áudio do sistema se o modo pedir; aula só grava sistema)
     → Whisper local transcreve cada trilha
       → Claude API estrutura conforme o modo (ideia / reunião / terapia / aula)
@@ -54,8 +54,8 @@ texto trafega para a Claude API, áudio nunca sai da máquina).
 aperte de novo para parar, volte ao que estava fazendo. A nota aparece no
 Obsidian em até ~15 minutos, sozinha.
 
-**Desktop:** aperte `Ctrl+Espaço` (ideia) ou `Ctrl+Alt+R`/`T`/`A` conforme o modo, fale (exceto no
-modo aula), aperte de novo para parar — ou `Ctrl+Alt+P` pra parar qualquer
+**Desktop:** aperte `Ctrl+Espaço` (ideia) ou `Caps Lock+R`/`T`/`A` conforme o modo, fale (exceto no
+modo aula), aperte de novo para parar — ou `Caps Lock+P` pra parar qualquer
 um sem precisar lembrar qual você usou. Uma notificação confirma quando a
 nota estiver pronta. Ícones equivalentes ficam disponíveis na Área de
 Trabalho depois de rodar `scripts\windows\criar-atalhos-desktop.ps1`.

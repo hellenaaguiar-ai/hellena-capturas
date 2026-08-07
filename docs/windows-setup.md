@@ -51,10 +51,10 @@ desktop:
   vault_class_dir: "C:\\Users\\Hellena\\ObsidianVault\\Inbox\\Aulas"
   hotkeys:
     idea: "ctrl+space"
-    meeting: "ctrl+alt+r"
-    therapy: "ctrl+alt+t"
-    class: "ctrl+alt+a"
-    stop: "ctrl+alt+p"
+    meeting: "caps lock+r"
+    therapy: "caps lock+t"
+    class: "caps lock+a"
+    stop: "caps lock+p"
     reflection: "caps lock+d"
 ```
 
@@ -146,9 +146,9 @@ vermelha aparece no canto da tela enquanto grava ("🔴 Gravando — Ideia"),
 muda pra laranja assim que você para ("⏳ Processando — Ideia", enquanto
 transcreve e a IA estrutura o texto), e some sozinha quando termina — não
 fica nada visível o resto do tempo. Uma notificação "Captura concluída"
-também aparece nesse momento. Teste também `Ctrl+Alt+R` (reunião) com
+também aparece nesse momento. Teste também `Caps Lock+R` (reunião) com
 algum áudio tocando no computador (ex: um vídeo), para confirmar que a
-trilha de sistema está sendo capturada. `Ctrl+Alt+A` (aula) usa a mesma
+trilha de sistema está sendo capturada. `Caps Lock+A` (aula) usa a mesma
 trilha de sistema, só que sem microfone.
 
 Um ícone azul aparece na bandeja do sistema (perto do relógio) assim que o

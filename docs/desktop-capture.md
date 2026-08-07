@@ -21,10 +21,10 @@ Um hotkey diferente por modo (sem seletor no meio, sem clique extra):
 | Modo | Atalho padrão | Microfone? | Áudio do sistema? |
 |---|---|---|---|
 | Ideia | `Ctrl+Espaço` | Sim | Não |
-| Reunião | `Ctrl+Alt+R` | Sim | Sim — o que toca no computador |
-| Terapia | `Ctrl+Alt+T` | Sim | Sim — o que toca no computador |
-| Aula | `Ctrl+Alt+A` | **Não** | Sim — o que toca no computador |
-| **Parar** (qualquer modo) | `Ctrl+Alt+P` | — | — |
+| Reunião | `Caps Lock+R` | Sim | Sim — o que toca no computador |
+| Terapia | `Caps Lock+T` | Sim | Sim — o que toca no computador |
+| Aula | `Caps Lock+A` | **Não** | Sim — o que toca no computador |
+| **Parar** (qualquer modo) | `Caps Lock+P` | — | — |
 | **Reflexão** (atalho extra pro modo Ideia) | `Caps Lock+D` | Sim | Não |
 
 Aula é o único modo que não grava seu microfone: você está assistindo, não
@@ -36,7 +36,7 @@ Apertar uma vez começa a gravar; apertar de novo (mesmo atalho) encerra —
 igual ao comportamento do Atalho no iPhone. Além disso existe um atalho à
 parte, **Parar**, que encerra qualquer gravação em andamento sem precisar
 lembrar qual dos quatro você usou para começar — útil se você apertou
-`Ctrl+Alt+R` mas não tem certeza, por exemplo. Se nada estiver gravando,
+`Caps Lock+R` mas não tem certeza, por exemplo. Se nada estiver gravando,
 apertar Parar não faz nada. Todos os seis atalhos e os nomes/pastas dos
 quatro modos são configuráveis em `config.yaml`, sem precisar mexer em código.
 
@@ -45,18 +45,24 @@ próprio modo Ideia (mesma pasta, mesmo processamento). A IA já classifica
 sozinha o tipo de conteúdo (ideia, reflexão, desabafo, mudança de
 pensamento, nota de terapia, etc.), então não fazia sentido duplicar toda
 a lógica só pra ter uma tecla separada — só registramos um segundo atalho
-apontando pro mesmo modo. `Caps Lock+D` foi escolhido a pedido explícito;
-vale registrar que apertar essa combinação pode ligar/desligar o Caps Lock
-de verdade no teclado (efeito do próprio Windows reagindo à tecla física,
-a biblioteca de atalhos não consegue suprimir isso) — se incomodar, trocar
-`hotkeys.reflection` no `config.yaml` para algo como `"ctrl+alt+d"` resolve.
+apontando pro mesmo modo.
+
+**Sobre usar Caps Lock como modificador** (pedido explícito, mais fácil de
+lembrar/alcançar que `Ctrl+Alt+letra`): todos os atalhos são registrados
+com `suppress=True` na biblioteca `keyboard`, que bloqueia a tecla na
+origem antes de chegar no resto do Windows — isso deve evitar o Caps Lock
+ligar/desligar de verdade como efeito colateral (e também impede o
+`Ctrl+Espaço` de "vazar" pra outro programa, tipo autocompletar do VS
+Code, enquanto o listener está rodando). Não temos como testar isso neste
+ambiente de desenvolvimento — se ainda assim o Caps Lock ficar
+"piscando"/alternando ao usar os atalhos, avise que trocamos de volta para
+`Ctrl+Alt+letra`.
 
 Considerei usar AutoHotkey (mais robusto historicamente para hotkeys no
 Windows) em vez da biblioteca Python `keyboard`, mas isso significaria
-instalar e manter duas ferramentas em vez de uma. Como o uso aqui é hotkeys
-simples (sem combinações complexas nem necessidade de suprimir o
-comportamento padrão da tecla), `keyboard` é suficiente e mantém tudo num
-único stack (Python).
+instalar e manter duas ferramentas em vez de uma. Como `keyboard` já
+suporta suprimir a tecla na origem (necessário pro caso do Caps Lock
+acima), ele é suficiente e mantém tudo num único stack (Python).
 
 ### 2. Captura dupla de áudio — `PyAudioWPatch` (WASAPI loopback)
 
