@@ -93,15 +93,28 @@ teclado e, quando aciona uma gravação, delega a transcrição/processamento
 pesado para uma thread separada — o hotkey continua responsivo enquanto uma
 gravação anterior ainda está sendo processada.
 
+O autostart só dispara no login — em uma máquina que raramente reinicia,
+se o listener for encerrado no meio do dia (ex: sair pela bandeja sem
+querer, ou um `Explorer.exe` reiniciando por outro motivo) ele não volta
+sozinho até o próximo login. Pra esse caso existe o ícone **"Iniciar
+Listener"** (ver 3.1) — um jeito de religar sem precisar do terminal.
+Ele tem uma trava de instância única (`desktop/singleton.py`, um arquivo
+`data/listener.pid` com o PID do processo ativo): clicar nele sem saber
+se já tem um listener rodando não cria uma segunda instância brigando
+pelos mesmos atalhos — a segunda simplesmente detecta a primeira e encerra
+sozinha, sem erro visível.
+
 ### 3.1. Alternativa ao atalho de teclado: ícone no Desktop
 
 Quem preferir clicar em vez de decorar `Ctrl+Alt+I/R/T/A/P` pode usar os
-arquivos em `scripts/windows/` (`Gravar Ideia.bat`, `Gravar Reuniao.bat`,
-`Gravar Terapia.bat`, `Gravar Aula.bat`, `Parar de Gravar.bat`). Um duplo
-clique simula o pressionamento do atalho correspondente contra o `listener`
-que já está rodando (não substitui o listener, só oferece outra forma de
-acioná-lo). `Parar de Gravar` encerra a gravação em andamento independente
-de qual dos quatro modos a começou — não precisa saber em qual ícone você
+arquivos em `scripts/windows/` (`Iniciar Listener.bat`, `Gravar Ideia.bat`,
+`Gravar Reuniao.bat`, `Gravar Terapia.bat`, `Gravar Aula.bat`,
+`Parar de Gravar.bat`). `Iniciar Listener` abre o listener em segundo
+plano (sem janela) — use quando ele não estiver rodando. Os outros cinco
+simulam o pressionamento do atalho correspondente contra o `listener` que
+já está rodando (não o substituem, só oferecem outra forma de acioná-lo).
+`Parar de Gravar` encerra a gravação em andamento independente de qual dos
+quatro modos a começou — não precisa saber em qual ícone você
 clicou antes.
 
 Copiar o `.bat` direto pra Área de Trabalho funciona, mas fica com o ícone

@@ -23,6 +23,7 @@ from .config import Config, load_config
 from .desktop import modes as modes_module
 from .desktop.audio_capture import RecordingSession, start_capture
 from .desktop.indicator import RecordingIndicator, close_badge
+from .desktop.singleton import acquire_single_instance_lock
 from .desktop.modes import CaptureMode, NOTE_TYPE_IDEA
 from .desktop.tray import TrayIcon
 from .desktop_pipeline import process_desktop_recording
@@ -188,6 +189,16 @@ def main() -> None:
     config = load_config()
     config.ensure_dirs()
     setup_logging(config)
+
+    # So uma instancia por vez - clicar no icone "Iniciar Listener" sem
+    # saber se ja tem um rodando nao pode resultar em dois processos
+    # competindo pelos mesmos atalhos globais.
+    import os
+
+    lock_path = config.data_dir / "listener.pid"
+    if not acquire_single_instance_lock(lock_path, os.getpid()):
+        logging.info("Ja existe um listener rodando - encerrando esta segunda instancia.")
+        return
 
     import keyboard
 
