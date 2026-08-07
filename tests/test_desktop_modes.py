@@ -52,7 +52,7 @@ def test_build_modes_uses_config_hotkeys_and_dirs(tmp_path):
 def test_default_hotkeys(tmp_path):
     config = make_config(tmp_path)
     idea = get_mode(config, "idea")
-    assert idea.hotkey == "ctrl+alt+i"
+    assert idea.hotkey == "ctrl+space"
 
     class_mode = get_mode(config, "class")
     assert class_mode.hotkey == "ctrl+alt+a"

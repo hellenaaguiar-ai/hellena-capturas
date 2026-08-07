@@ -50,7 +50,7 @@ desktop:
   vault_therapy_dir: "C:\\Users\\Hellena\\ObsidianVault\\Inbox\\Terapia"
   vault_class_dir: "C:\\Users\\Hellena\\ObsidianVault\\Inbox\\Aulas"
   hotkeys:
-    idea: "ctrl+alt+i"
+    idea: "ctrl+space"
     meeting: "ctrl+alt+r"
     therapy: "ctrl+alt+t"
     class: "ctrl+alt+a"
@@ -140,7 +140,7 @@ e teste rodando o listener em primeiro plano, num terminal:
 python -m voice_capture.listener
 ```
 
-Aperte `Ctrl+Alt+I` (modo ideia), fale, aperte de novo. Uma janelinha
+Aperte `Ctrl+Espaço` (modo ideia), fale, aperte de novo. Uma janelinha
 vermelha aparece no canto da tela enquanto grava ("🔴 Gravando — Ideia"),
 muda pra laranja assim que você para ("⏳ Processando — Ideia", enquanto
 transcreve e a IA estrutura o texto), e some sozinha quando termina — não

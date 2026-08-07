@@ -20,7 +20,7 @@ Um hotkey diferente por modo (sem seletor no meio, sem clique extra):
 
 | Modo | Atalho padrão | Microfone? | Áudio do sistema? |
 |---|---|---|---|
-| Ideia | `Ctrl+Alt+I` | Sim | Não |
+| Ideia | `Ctrl+Espaço` | Sim | Não |
 | Reunião | `Ctrl+Alt+R` | Sim | Sim — o que toca no computador |
 | Terapia | `Ctrl+Alt+T` | Sim | Sim — o que toca no computador |
 | Aula | `Ctrl+Alt+A` | **Não** | Sim — o que toca no computador |
@@ -106,7 +106,8 @@ sozinha, sem erro visível.
 
 ### 3.1. Alternativa ao atalho de teclado: ícone no Desktop
 
-Quem preferir clicar em vez de decorar `Ctrl+Alt+I/R/T/A/P` pode usar os
+Quem preferir clicar em vez de decorar `Ctrl+Espaço` (ideia) e
+`Ctrl+Alt+R/T/A/P` (demais modos) pode usar os
 arquivos em `scripts/windows/` (`Iniciar Listener.bat`, `Gravar Ideia.bat`,
 `Gravar Reuniao.bat`, `Gravar Terapia.bat`, `Gravar Aula.bat`,
 `Parar de Gravar.bat`). `Iniciar Listener` abre o listener em segundo
