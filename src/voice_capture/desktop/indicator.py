@@ -40,7 +40,6 @@ def _run_gui() -> None:
     import tkinter as tk
 
     root = tk.Tk()
-    root.withdraw()  # comeca escondida - so aparece quando tiver algo acontecendo
     root.overrideredirect(True)
     root.attributes("-topmost", True)
     try:
@@ -59,6 +58,21 @@ def _run_gui() -> None:
         y = screen_h - height - 60
         root.geometry(f"{width}x{height}+{x}+{y}")
 
+    def hide() -> None:
+        # Move pra bem fora da tela em vez de root.withdraw(). Uma janela
+        # "withdrawn" no Tkinter as vezes reporta o tamanho errado
+        # (menor/cortado) na proxima vez que e mostrada de novo, porque o
+        # gerenciador de geometria nao recalculou o tamanho de verdade
+        # enquanto ela estava escondida - foi exatamente o que causou a
+        # janelinha aparecer cortada/estreita. Mantendo ela sempre
+        # "mapeada" (so que fora da area visivel), o tamanho calculado em
+        # reposition() sempre reflete o conteudo atual de verdade.
+        root.geometry("1x1+-2000+-2000")
+
+    # comeca fora da tela, ja mapeada (nunca usamos withdraw/deiconify)
+    hide()
+    root.deiconify()
+
     def poll_queue() -> None:
         try:
             while True:
@@ -66,9 +80,8 @@ def _run_gui() -> None:
                 if action == "show":
                     label.config(text=text, **style)
                     reposition()
-                    root.deiconify()
                 elif action == "hide":
-                    root.withdraw()
+                    hide()
                 elif action == "close":
                     root.destroy()
                     return
