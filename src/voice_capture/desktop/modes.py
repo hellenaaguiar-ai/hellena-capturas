@@ -1,4 +1,5 @@
-"""Definicao dos modos de captura no desktop (ideia / reuniao / terapia / aula)."""
+"""Definicao dos modos de captura no desktop (ideia / reflexao / reuniao /
+terapia / aula)."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -7,6 +8,7 @@ from pathlib import Path
 from ..config import Config
 
 NOTE_TYPE_IDEA = "voice-capture"
+NOTE_TYPE_REFLECTION = "reflection-capture"
 NOTE_TYPE_MEETING = "meeting-capture"
 NOTE_TYPE_THERAPY = "therapy-capture"
 NOTE_TYPE_CLASS = "class-capture"
@@ -34,6 +36,19 @@ def build_modes(config: Config) -> list[CaptureMode]:
             capture_system_audio=False,
             note_type=NOTE_TYPE_IDEA,
             vault_dir=config.vault_inbox_dir,
+        ),
+        CaptureMode(
+            key="reflection",
+            label="Reflexão",
+            hotkey=config.hotkeys["reflection"],
+            # So microfone, igual Ideia - a diferenca e o processamento:
+            # formato mais proximo do de terapia (sintese com tom emocional
+            # preservado, temas, percepcoes), pasta propria, sem misturar
+            # com ideias "objetivas".
+            capture_mic=True,
+            capture_system_audio=False,
+            note_type=NOTE_TYPE_REFLECTION,
+            vault_dir=config.vault_reflection_dir,
         ),
         CaptureMode(
             key="meeting",

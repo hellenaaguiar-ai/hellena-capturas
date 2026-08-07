@@ -145,6 +145,86 @@ def process_meeting_transcript(labeled_text: str, api_key: str, model: str) -> P
 
 
 # ---------------------------------------------------------------------------
+# Reflexao (diario de bordo - so microfone, uma pessoa falando sozinha)
+# ---------------------------------------------------------------------------
+
+REFLECTION_SYSTEM_PROMPT = f"""\
+Voce processa a transcricao de uma reflexao/desabafo falado em voz alta -
+uma unica pessoa pensando em voz alta, sem interlocutor (so a trilha do
+microfone). Pode ser um desabafo, uma percepcao sobre si mesma, uma
+mudanca de opiniao, uma observacao comportamental - mais proximo de uma
+entrada de diario do que de uma "ideia" objetiva.
+
+{COMMON_RULES}
+- Voce NAO diagnostica, NAO interpreta psicologicamente e NAO da opiniao \
+clinica sobre o que foi dito - mesma regra do modo terapia. Apenas \
+organiza e sintetiza o que a pessoa disse.
+- Preserve o tom emocional expresso na fala (frustracao, alivio, duvida, \
+etc.) na sintese - nao neutralize nem "objetifique" o que foi dito.
+- "insights" sao percepcoes que a propria pessoa expressou (ex: "percebi \
+que..."), nunca uma interpretacao sua do que ela "realmente" quis dizer."""
+
+REFLECTION_TOOL_SCHEMA = {
+    "name": "structure_reflection_capture",
+    "description": "Estrutura uma reflexao/desabafo falado em sintese (com tom emocional preservado), temas e percepcoes, sem interpretacao clinica.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "title": {"type": "string", "description": "Titulo curto (ate 80 caracteres), descritivo do tema central."},
+            "synthesis": {
+                "type": "string",
+                "description": (
+                    "Sintese fiel do que foi dito, 3 a 6 frases, preservando o tom emocional "
+                    "expresso - sem interpretacao clinica nem neutralizar o que foi sentido."
+                ),
+            },
+            "themes": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Temas abordados na fala, citados explicitamente.",
+            },
+            "insights": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Percepcoes que a propria pessoa expressou durante a fala. Vazio se nenhuma.",
+            },
+            "confidence": {"type": "string", "enum": CONFIDENCE_LEVELS},
+            "uncertainty_notes": {"type": "string", "description": "String vazia se nao houver ambiguidade."},
+        },
+        "required": ["title", "synthesis", "themes", "insights", "confidence", "uncertainty_notes"],
+    },
+}
+
+
+@dataclass
+class ProcessedReflection:
+    title: str
+    synthesis: str
+    themes: list[str] = field(default_factory=list)
+    insights: list[str] = field(default_factory=list)
+    confidence: str = "baixa"
+    uncertainty_notes: str = ""
+
+
+def process_reflection_transcript(text: str, api_key: str, model: str) -> ProcessedReflection:
+    data = call_structured_tool(
+        system_prompt=REFLECTION_SYSTEM_PROMPT,
+        tool_schema=REFLECTION_TOOL_SCHEMA,
+        user_content=f"Transcricao da reflexao:\n\n{text}",
+        api_key=api_key,
+        model=model,
+    )
+    return ProcessedReflection(
+        title=data["title"],
+        synthesis=data["synthesis"],
+        themes=coerce_str_list(data.get("themes", [])),
+        insights=coerce_str_list(data.get("insights", [])),
+        confidence=data.get("confidence", "baixa"),
+        uncertainty_notes=data.get("uncertainty_notes", ""),
+    )
+
+
+# ---------------------------------------------------------------------------
 # Terapia
 # ---------------------------------------------------------------------------
 

@@ -17,6 +17,7 @@ def make_config(tmp_path) -> Config:
         vault_meeting_dir=tmp_path / "vault" / "Inbox" / "Reuniões",
         vault_therapy_dir=tmp_path / "vault" / "Inbox" / "Terapia",
         vault_class_dir=tmp_path / "vault" / "Inbox" / "Aulas",
+        vault_reflection_dir=tmp_path / "vault" / "Inbox" / "Reflexões",
     )
 
 
@@ -25,12 +26,17 @@ def test_build_modes_uses_config_hotkeys_and_dirs(tmp_path):
     modes = build_modes(config)
 
     keys = {m.key for m in modes}
-    assert keys == {"idea", "meeting", "therapy", "class"}
+    assert keys == {"idea", "reflection", "meeting", "therapy", "class"}
 
     idea = get_mode(config, "idea")
     assert idea.capture_mic is True
     assert idea.capture_system_audio is False
     assert idea.vault_dir == config.vault_inbox_dir
+
+    reflection = get_mode(config, "reflection")
+    assert reflection.capture_mic is True
+    assert reflection.capture_system_audio is False
+    assert reflection.vault_dir == config.vault_reflection_dir
 
     meeting = get_mode(config, "meeting")
     assert meeting.capture_mic is True
@@ -54,5 +60,8 @@ def test_default_hotkeys(tmp_path):
     idea = get_mode(config, "idea")
     assert idea.hotkey == "ctrl+space"
 
+    reflection = get_mode(config, "reflection")
+    assert reflection.hotkey == "ctrl+alt+d"
+
     class_mode = get_mode(config, "class")
-    assert class_mode.hotkey == "caps lock+a"
+    assert class_mode.hotkey == "ctrl+alt+a"

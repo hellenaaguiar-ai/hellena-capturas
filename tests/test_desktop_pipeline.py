@@ -4,7 +4,7 @@ from pathlib import Path
 
 from voice_capture.config import Config
 from voice_capture.desktop.modes import get_mode
-from voice_capture.desktop_ai import ProcessedClass, ProcessedMeeting, ProcessedTherapy
+from voice_capture.desktop_ai import ProcessedClass, ProcessedMeeting, ProcessedReflection, ProcessedTherapy
 from voice_capture.desktop_pipeline import process_desktop_recording
 from voice_capture.state import STATUS_DONE, STATUS_ERROR, StateStore
 from voice_capture.transcribe import TranscriptResult
@@ -23,6 +23,7 @@ def make_config(tmp_path) -> Config:
         vault_meeting_dir=tmp_path / "vault" / "Inbox" / "Reuniões",
         vault_therapy_dir=tmp_path / "vault" / "Inbox" / "Terapia",
         vault_class_dir=tmp_path / "vault" / "Inbox" / "Aulas",
+        vault_reflection_dir=tmp_path / "vault" / "Inbox" / "Reflexões",
     )
     config.ensure_dirs()
     return config
@@ -235,3 +236,51 @@ def test_class_mode_creates_note_without_mic_track(tmp_path):
     assert "North star metric" in content
     assert "texto transcrito (system)" in content
     assert "audio_file_mic" not in content
+
+
+def fake_reflection_process(text: str, api_key: str, model: str) -> ProcessedReflection:
+    assert text == "texto transcrito (mic)"
+    return ProcessedReflection(
+        title="Cansaço com a rotina de comparação",
+        synthesis="Percebeu que fica se comparando com outras pessoas e que isso a esgota.",
+        themes=["comparação", "autocrítica"],
+        insights=["percebi que fico exausta de me comparar o tempo todo"],
+        confidence="media",
+        uncertainty_notes="",
+    )
+
+
+def test_reflection_mode_has_no_system_audio(tmp_path):
+    config = make_config(tmp_path)
+    mode = get_mode(config, "reflection")
+    assert mode.capture_mic is True
+    assert mode.capture_system_audio is False
+    assert mode.vault_dir == config.vault_reflection_dir
+
+
+def test_reflection_mode_creates_note_with_emotional_synthesis(tmp_path):
+    config = make_config(tmp_path)
+    state = StateStore(config.state_file)
+    mode = get_mode(config, "reflection")
+
+    mic_path = make_silent_wav(config.desktop_audio_dir / "reflection-mic-1.wav")
+
+    result = process_desktop_recording(
+        mode,
+        mic_path,
+        None,
+        datetime(2026, 7, 23, 21, 0),
+        config,
+        state,
+        transcribe_fn=fake_transcribe,
+        process_reflection_fn=fake_reflection_process,
+    )
+
+    assert result == "done"
+    notes = list(mode.vault_dir.glob("*.md"))
+    assert len(notes) == 1
+    content = notes[0].read_text(encoding="utf-8")
+    assert "type: reflection-capture" in content
+    assert "exausta de me comparar" in content
+    assert "texto transcrito (mic)" in content
+    assert "audio_file_system" not in content

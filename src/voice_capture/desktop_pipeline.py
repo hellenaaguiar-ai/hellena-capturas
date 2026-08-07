@@ -1,6 +1,6 @@
-"""Orquestra uma gravacao de reuniao, terapia ou aula: uma ou duas trilhas
-de audio ja gravadas -> transcricao de cada uma -> estruturacao por IA
-conforme o modo -> Markdown no vault -> estado local.
+"""Orquestra uma gravacao de reflexao, reuniao, terapia ou aula: uma ou
+duas trilhas de audio ja gravadas -> transcricao de cada uma ->
+estruturacao por IA conforme o modo -> Markdown no vault -> estado local.
 
 O modo "ideia" no desktop reaproveita o pipeline mobile (pipeline.py)
 diretamente, ja que produz o mesmo tipo de nota - nao passa por aqui.
@@ -12,19 +12,28 @@ from pathlib import Path
 from typing import Callable, Optional
 
 from .config import Config
-from .desktop.modes import CaptureMode, NOTE_TYPE_CLASS, NOTE_TYPE_MEETING, NOTE_TYPE_THERAPY
+from .desktop.modes import (
+    CaptureMode,
+    NOTE_TYPE_CLASS,
+    NOTE_TYPE_MEETING,
+    NOTE_TYPE_REFLECTION,
+    NOTE_TYPE_THERAPY,
+)
 from .desktop_ai import (
     ProcessedClass,
     ProcessedMeeting,
+    ProcessedReflection,
     ProcessedTherapy,
     process_class_transcript,
     process_meeting_transcript,
+    process_reflection_transcript,
     process_therapy_transcript,
 )
 from .desktop_markdown import (
     DesktopNoteMeta,
     build_class_markdown,
     build_meeting_markdown,
+    build_reflection_markdown,
     build_therapy_markdown,
 )
 from .hashing import combined_hash
@@ -36,6 +45,7 @@ TranscribeFn = Callable[[Path, str, str, str], TranscriptResult]
 MeetingProcessFn = Callable[[str, str, str], ProcessedMeeting]
 TherapyProcessFn = Callable[[str, str, str], ProcessedTherapy]
 ClassProcessFn = Callable[[str, str, str], ProcessedClass]
+ReflectionProcessFn = Callable[[str, str, str], ProcessedReflection]
 
 
 def _now_iso() -> str:
@@ -53,8 +63,9 @@ def process_desktop_recording(
     process_meeting_fn: MeetingProcessFn = process_meeting_transcript,
     process_therapy_fn: TherapyProcessFn = process_therapy_transcript,
     process_class_fn: ClassProcessFn = process_class_transcript,
+    process_reflection_fn: ReflectionProcessFn = process_reflection_transcript,
 ) -> str:
-    if mode.note_type not in (NOTE_TYPE_MEETING, NOTE_TYPE_THERAPY, NOTE_TYPE_CLASS):
+    if mode.note_type not in (NOTE_TYPE_MEETING, NOTE_TYPE_THERAPY, NOTE_TYPE_CLASS, NOTE_TYPE_REFLECTION):
         raise ValueError(f"Modo desktop nao suportado neste pipeline: {mode.key}")
 
     content_hash = combined_hash([p for p in (mic_path, system_path) if p is not None])
@@ -125,6 +136,10 @@ def process_desktop_recording(
             processed_therapy = process_therapy_fn(labeled_text, config.anthropic_api_key, config.anthropic_model)
             markdown = build_therapy_markdown(processed_therapy, mic_text, system_text, meta)
             title = processed_therapy.title
+        elif mode.note_type == NOTE_TYPE_REFLECTION:
+            processed_reflection = process_reflection_fn(mic_text, config.anthropic_api_key, config.anthropic_model)
+            markdown = build_reflection_markdown(processed_reflection, mic_text, meta)
+            title = processed_reflection.title
         else:
             processed_class = process_class_fn(system_text, config.anthropic_api_key, config.anthropic_model)
             markdown = build_class_markdown(processed_class, system_text, meta)

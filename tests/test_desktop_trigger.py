@@ -1,7 +1,7 @@
 import pytest
 
 from voice_capture.config import Config
-from voice_capture.desktop.trigger import trigger_mode, trigger_reflection, trigger_stop
+from voice_capture.desktop.trigger import trigger_mode, trigger_stop
 
 
 def make_config(tmp_path) -> Config:
@@ -17,6 +17,7 @@ def make_config(tmp_path) -> Config:
         vault_meeting_dir=tmp_path / "vault" / "Inbox" / "Reuniões",
         vault_therapy_dir=tmp_path / "vault" / "Inbox" / "Terapia",
         vault_class_dir=tmp_path / "vault" / "Inbox" / "Aulas",
+        vault_reflection_dir=tmp_path / "vault" / "Inbox" / "Reflexões",
     )
 
 
@@ -66,11 +67,11 @@ def test_trigger_stop_sends_configured_hotkey(tmp_path):
     assert sent == [config.hotkeys["stop"]]
 
 
-def test_trigger_reflection_sends_configured_hotkey(tmp_path):
+def test_trigger_mode_reflection(tmp_path):
     config = make_config(tmp_path)
     sent = []
 
-    hotkey = trigger_reflection(config, send_keys=sent.append)
+    mode = trigger_mode("reflection", config, send_keys=sent.append)
 
-    assert hotkey == config.hotkeys["reflection"]
+    assert mode.key == "reflection"
     assert sent == [config.hotkeys["reflection"]]

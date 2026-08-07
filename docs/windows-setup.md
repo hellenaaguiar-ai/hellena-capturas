@@ -49,13 +49,14 @@ desktop:
   vault_meeting_dir: "C:\\Users\\Hellena\\ObsidianVault\\Inbox\\Reuniões"
   vault_therapy_dir: "C:\\Users\\Hellena\\ObsidianVault\\Inbox\\Terapia"
   vault_class_dir: "C:\\Users\\Hellena\\ObsidianVault\\Inbox\\Aulas"
+  vault_reflection_dir: "C:\\Users\\Hellena\\ObsidianVault\\Inbox\\Reflexões"
   hotkeys:
     idea: "ctrl+space"
-    meeting: "caps lock+r"
-    therapy: "caps lock+t"
-    class: "caps lock+a"
-    stop: "caps lock+p"
-    reflection: "caps lock+d"
+    reflection: "ctrl+alt+d"
+    meeting: "ctrl+alt+r"
+    therapy: "ctrl+alt+t"
+    class: "ctrl+alt+a"
+    stop: "ctrl+alt+p"
 ```
 
 `whisper_initial_prompt` é opcional e serve pra reduzir erro de grafia em
@@ -146,10 +147,12 @@ vermelha aparece no canto da tela enquanto grava ("🔴 Gravando — Ideia"),
 muda pra laranja assim que você para ("⏳ Processando — Ideia", enquanto
 transcreve e a IA estrutura o texto), e some sozinha quando termina — não
 fica nada visível o resto do tempo. Uma notificação "Captura concluída"
-também aparece nesse momento. Teste também `Caps Lock+R` (reunião) com
+também aparece nesse momento. Teste também `Ctrl+Alt+R` (reunião) com
 algum áudio tocando no computador (ex: um vídeo), para confirmar que a
-trilha de sistema está sendo capturada. `Caps Lock+A` (aula) usa a mesma
-trilha de sistema, só que sem microfone.
+trilha de sistema está sendo capturada. `Ctrl+Alt+A` (aula) usa a mesma
+trilha de sistema, só que sem microfone. `Ctrl+Alt+D` (reflexão) grava só
+o microfone, igual ideia, mas processa e salva num formato diferente (mais
+próximo do de terapia).
 
 Um ícone azul aparece na bandeja do sistema (perto do relógio) assim que o
 listener inicia — fica vermelho enquanto uma gravação está em andamento.

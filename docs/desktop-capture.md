@@ -1,8 +1,8 @@
 # Captura no desktop — substituindo o Superwhisper
 
 Extensão do projeto: captura por voz **no computador**, com atalho de teclado
-global, para quatro casos — ideia solta, reunião, terapia e aula — sem pagar
-assinatura de nenhuma ferramenta de terceiro.
+global, para cinco casos — ideia solta, reflexão/desabafo, reunião, terapia
+e aula — sem pagar assinatura de nenhuma ferramenta de terceiro.
 
 ## Por que isso é um componente diferente do pipeline do celular
 
@@ -21,11 +21,11 @@ Um hotkey diferente por modo (sem seletor no meio, sem clique extra):
 | Modo | Atalho padrão | Microfone? | Áudio do sistema? |
 |---|---|---|---|
 | Ideia | `Ctrl+Espaço` | Sim | Não |
-| Reunião | `Caps Lock+R` | Sim | Sim — o que toca no computador |
-| Terapia | `Caps Lock+T` | Sim | Sim — o que toca no computador |
-| Aula | `Caps Lock+A` | **Não** | Sim — o que toca no computador |
-| **Parar** (qualquer modo) | `Caps Lock+P` | — | — |
-| **Reflexão** (atalho extra pro modo Ideia) | `Caps Lock+D` | Sim | Não |
+| Reflexão | `Ctrl+Alt+D` | Sim | Não |
+| Reunião | `Ctrl+Alt+R` | Sim | Sim — o que toca no computador |
+| Terapia | `Ctrl+Alt+T` | Sim | Sim — o que toca no computador |
+| Aula | `Ctrl+Alt+A` | **Não** | Sim — o que toca no computador |
+| **Parar** (qualquer modo) | `Ctrl+Alt+P` | — | — |
 
 Aula é o único modo que não grava seu microfone: você está assistindo, não
 falando, então não há o que capturar do seu lado — só o áudio da aula em si
@@ -35,34 +35,32 @@ necessidade.
 Apertar uma vez começa a gravar; apertar de novo (mesmo atalho) encerra —
 igual ao comportamento do Atalho no iPhone. Além disso existe um atalho à
 parte, **Parar**, que encerra qualquer gravação em andamento sem precisar
-lembrar qual dos quatro você usou para começar — útil se você apertou
-`Caps Lock+R` mas não tem certeza, por exemplo. Se nada estiver gravando,
+lembrar qual dos cinco você usou para começar — útil se você apertou
+`Ctrl+Alt+R` mas não tem certeza, por exemplo. Se nada estiver gravando,
 apertar Parar não faz nada. Todos os seis atalhos e os nomes/pastas dos
-quatro modos são configuráveis em `config.yaml`, sem precisar mexer em código.
+cinco modos são configuráveis em `config.yaml`, sem precisar mexer em código.
 
-**Reflexão** não é um modo novo de verdade — é um segundo atalho pro
-próprio modo Ideia (mesma pasta, mesmo processamento). A IA já classifica
-sozinha o tipo de conteúdo (ideia, reflexão, desabafo, mudança de
-pensamento, nota de terapia, etc.), então não fazia sentido duplicar toda
-a lógica só pra ter uma tecla separada — só registramos um segundo atalho
-apontando pro mesmo modo.
+**Reflexão** grava só o microfone, igual Ideia, mas tem pasta e
+processamento próprios: formato mais próximo do de terapia (síntese
+preservando o tom emocional, temas, percepções que a própria pessoa
+expressou), em vez da estruturação "objetiva" do modo Ideia (título,
+síntese, entidades, classificação). Pensado pra desabafos/reflexões que
+não são bem uma "ideia" nem cabem misturados nela.
 
-**Sobre usar Caps Lock como modificador** (pedido explícito, mais fácil de
-lembrar/alcançar que `Ctrl+Alt+letra`): todos os atalhos são registrados
-com `suppress=True` na biblioteca `keyboard`, que bloqueia a tecla na
-origem antes de chegar no resto do Windows — isso deve evitar o Caps Lock
-ligar/desligar de verdade como efeito colateral (e também impede o
-`Ctrl+Espaço` de "vazar" pra outro programa, tipo autocompletar do VS
-Code, enquanto o listener está rodando). Não temos como testar isso neste
-ambiente de desenvolvimento — se ainda assim o Caps Lock ficar
-"piscando"/alternando ao usar os atalhos, avise que trocamos de volta para
-`Ctrl+Alt+letra`.
+**Sobre Caps Lock como modificador de atalho:** chegamos a testar
+`Caps Lock+letra` em todos os atalhos (pedido inicial, mais fácil de
+lembrar/alcançar que `Ctrl+Alt+letra`), inclusive com `suppress=True` na
+biblioteca `keyboard` tentando evitar o Caps Lock ligar/desligar de
+verdade como efeito colateral. Revertido depois de um teste real: o
+atalho de "Parar" com Caps Lock simplesmente não respondeu numa gravação
+de verdade, então voltamos para `Ctrl+Alt+letra` (e sem `suppress`), que
+já tinha sido validado funcionando de forma confiável.
 
 Considerei usar AutoHotkey (mais robusto historicamente para hotkeys no
 Windows) em vez da biblioteca Python `keyboard`, mas isso significaria
-instalar e manter duas ferramentas em vez de uma. Como `keyboard` já
-suporta suprimir a tecla na origem (necessário pro caso do Caps Lock
-acima), ele é suficiente e mantém tudo num único stack (Python).
+instalar e manter duas ferramentas em vez de uma. Como o uso aqui é
+hotkeys simples (Ctrl+Alt+letra), `keyboard` é suficiente e mantém tudo
+num único stack (Python).
 
 ### 2. Captura dupla de áudio — `PyAudioWPatch` (WASAPI loopback)
 
@@ -159,6 +157,11 @@ Reaproveita o vault do Second Brain já configurado:
 - **Ideia** → mesma pasta e mesma estrutura já usada pelo celular
   (`type: voice-capture`), só que a origem passa a ser `desktop-voice` em vez
   de `mobile-voice`.
+- **Reflexão** → pasta própria (`Inbox/Reflexões` por padrão), nota tipo
+  `reflection-capture`: síntese preservando o tom emocional expresso, temas
+  abordados, percepções que a própria pessoa expressou, e a transcrição
+  única (sem trilha de sistema). Mesma regra de não-diagnóstico do modo
+  terapia — organiza o que foi dito, não interpreta psicologicamente.
 - **Reunião** → pasta própria (`Inbox/Reuniões` por padrão), nota tipo
   `meeting-capture`: resumo, decisões, itens de ação, e as duas transcrições
   (você / outros participantes). Distingue **participantes** (quem

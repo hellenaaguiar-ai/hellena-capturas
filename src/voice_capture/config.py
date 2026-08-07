@@ -12,21 +12,21 @@ DEFAULT_CONFIG_PATH = Path("config.yaml")
 
 DEFAULT_HOTKEYS = {
     "idea": "ctrl+space",
-    # Caps Lock+letra por pedido explicito (mais facil de lembrar/alcancar
-    # que Ctrl+Alt+letra). listener.py registra esses hotkeys com
-    # suppress=True especificamente por causa deles - isso bloqueia o
-    # evento na origem, o que deve evitar o efeito colateral de ligar/
-    # desligar o Caps Lock de verdade (nao pode ser testado neste
-    # ambiente, so num Windows real).
-    "meeting": "caps lock+r",
-    "therapy": "caps lock+t",
-    "class": "caps lock+a",
-    "stop": "caps lock+p",
-    # Atalho extra pro MESMO modo "idea" (mesma pasta, mesmo processamento -
-    # a IA ja classifica reflexao/desabafo/mudanca de pensamento
-    # automaticamente). So um segundo jeito de acionar, pra separar na
-    # cabeca "tive uma ideia" de "preciso desabafar/refletir".
-    "reflection": "caps lock+d",
+    "meeting": "ctrl+alt+r",
+    "therapy": "ctrl+alt+t",
+    "class": "ctrl+alt+a",
+    "stop": "ctrl+alt+p",
+    # Modo Reflexao - so microfone, pasta e processamento propios (formato
+    # mais proximo do de terapia: sintese com tom emocional, temas,
+    # percepcoes - nao a estruturacao "objetiva" do modo Ideia).
+    # Ja tentamos Caps Lock+letra pra este e pros outros quatro acima -
+    # revertido: alem do risco (nunca confirmado, mas nunca descartado) de
+    # ligar/desligar o Caps Lock de verdade, o atalho de "Parar" com Caps
+    # Lock simplesmente nao respondeu numa gravacao real. Caps Lock como
+    # modificador de atalho global parece pouco confiavel nessa
+    # biblioteca/Windows - voltamos pro Ctrl+Alt+letra, que ja tinha sido
+    # validado funcionando.
+    "reflection": "ctrl+alt+d",
 }
 
 
@@ -43,6 +43,7 @@ class Config:
     vault_meeting_dir: Path
     vault_therapy_dir: Path
     vault_class_dir: Path
+    vault_reflection_dir: Path
     hotkeys: dict = field(default_factory=lambda: dict(DEFAULT_HOTKEYS))
     whisper_initial_prompt: str = ""
 
@@ -77,6 +78,7 @@ class Config:
             self.vault_meeting_dir,
             self.vault_therapy_dir,
             self.vault_class_dir,
+            self.vault_reflection_dir,
             self.data_dir,
             self.audio_archive_dir,
             self.transcripts_raw_dir,
@@ -120,5 +122,6 @@ def load_config(path: Path | str = DEFAULT_CONFIG_PATH) -> Config:
         vault_meeting_dir=Path(desktop_raw.get("vault_meeting_dir", vault_inbox_dir.parent / "Reuniões")),
         vault_therapy_dir=Path(desktop_raw.get("vault_therapy_dir", vault_inbox_dir.parent / "Terapia")),
         vault_class_dir=Path(desktop_raw.get("vault_class_dir", vault_inbox_dir.parent / "Aulas")),
+        vault_reflection_dir=Path(desktop_raw.get("vault_reflection_dir", vault_inbox_dir.parent / "Reflexões")),
         hotkeys=hotkeys,
     )

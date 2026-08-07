@@ -3,21 +3,18 @@ teclado - simula o pressionamento do hotkey configurado, pra quem preferir
 clicar num icone no Desktop em vez de decorar Ctrl+Alt+X. So funciona com
 o listener ja rodando.
 
-Cada modo (idea/meeting/therapy/class) alterna: aperta uma vez pra
-comecar, aperta o MESMO de novo pra parar. 'stop' e um atalho a parte que
-encerra qualquer gravacao em andamento, seja ela qual modo for - pensado
-pra quem nao lembra em qual dos quatro cliques comecou a gravar. 'reflection'
-e um segundo atalho pro MESMO modo "idea" (mesmo processamento, mesma
-pasta) - so uma tecla alternativa pra quando o que vier a cabeca for mais
-desabafo/reflexao do que ideia.
+Cada modo (idea/reflection/meeting/therapy/class) alterna: aperta uma vez
+pra comecar, aperta o MESMO de novo pra parar. 'stop' e um atalho a parte
+que encerra qualquer gravacao em andamento, seja ela qual modo for -
+pensado pra quem nao lembra em qual dos cinco cliques comecou a gravar.
 
 Uso:
   python -m voice_capture.desktop.trigger idea
+  python -m voice_capture.desktop.trigger reflection
   python -m voice_capture.desktop.trigger meeting
   python -m voice_capture.desktop.trigger therapy
   python -m voice_capture.desktop.trigger class
   python -m voice_capture.desktop.trigger stop
-  python -m voice_capture.desktop.trigger reflection
 """
 from __future__ import annotations
 
@@ -27,10 +24,9 @@ from typing import Callable
 from ..config import Config, load_config
 from .modes import CaptureMode, build_modes
 
-VALID_MODE_KEYS = ("idea", "meeting", "therapy", "class")
+VALID_MODE_KEYS = ("idea", "reflection", "meeting", "therapy", "class")
 STOP_KEY = "stop"
-REFLECTION_KEY = "reflection"
-ALL_TRIGGER_KEYS = VALID_MODE_KEYS + (STOP_KEY, REFLECTION_KEY)
+ALL_TRIGGER_KEYS = VALID_MODE_KEYS + (STOP_KEY,)
 
 
 def trigger_mode(mode_key: str, config: Config, send_keys: Callable[[str], None] | None = None) -> CaptureMode:
@@ -53,8 +49,8 @@ def trigger_mode(mode_key: str, config: Config, send_keys: Callable[[str], None]
 
 def trigger_hotkey(hotkey_key: str, config: Config, send_keys: Callable[[str], None] | None = None) -> str:
     """Simula o pressionamento de um hotkey avulso (nao ligado a um
-    CaptureMode com toggle proprio, como 'stop' e 'reflection'). Retorna
-    o hotkey acionado, para quem chamar poder confirmar/logar."""
+    CaptureMode com toggle proprio - hoje so 'stop'). Retorna o hotkey
+    acionado, para quem chamar poder confirmar/logar."""
     if send_keys is None:
         import keyboard
 
@@ -70,12 +66,6 @@ def trigger_stop(config: Config, send_keys: Callable[[str], None] | None = None)
     return trigger_hotkey(STOP_KEY, config, send_keys)
 
 
-def trigger_reflection(config: Config, send_keys: Callable[[str], None] | None = None) -> str:
-    """Simula o pressionamento do atalho alternativo de reflexao/desabafo
-    (mesmo modo "idea" por baixo)."""
-    return trigger_hotkey(REFLECTION_KEY, config, send_keys)
-
-
 def main() -> None:
     if len(sys.argv) != 2 or sys.argv[1] not in ALL_TRIGGER_KEYS:
         print(f"Uso: python -m voice_capture.desktop.trigger {'|'.join(ALL_TRIGGER_KEYS)}")
@@ -86,9 +76,6 @@ def main() -> None:
     if key == STOP_KEY:
         hotkey = trigger_stop(config)
         print(f"Atalho de 'Parar' acionado ({hotkey}).")
-    elif key == REFLECTION_KEY:
-        hotkey = trigger_reflection(config)
-        print(f"Atalho de 'Reflexão' acionado ({hotkey}).")
     else:
         mode = trigger_mode(key, config)
         print(f"Atalho de '{mode.label}' acionado ({mode.hotkey}).")
