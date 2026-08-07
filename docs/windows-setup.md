@@ -55,6 +55,7 @@ desktop:
     therapy: "ctrl+alt+t"
     class: "ctrl+alt+a"
     stop: "ctrl+alt+p"
+    reflection: "caps lock+d"
 ```
 
 `whisper_initial_prompt` é opcional e serve pra reduzir erro de grafia em

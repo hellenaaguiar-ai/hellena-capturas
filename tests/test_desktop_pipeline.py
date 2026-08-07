@@ -50,7 +50,8 @@ def fake_meeting_process(labeled_text: str, api_key: str, model: str) -> Process
         summary="Discussão sobre o roadmap.",
         decisions=["Adiar o lançamento"],
         action_items=["Enviar resumo por e-mail"],
-        participants_mentioned=["Ana"],
+        participants=["Ana"],
+        people_mentioned=["Barbara Torres"],
         open_questions=[],
         confidence="alta",
         uncertainty_notes="",
@@ -100,6 +101,9 @@ def test_meeting_mode_creates_note_and_marks_done(tmp_path):
     assert "Adiar o lançamento" in content
     assert "texto transcrito (mic)" in content
     assert "texto transcrito (system)" in content
+    assert 'participants: ["Ana"]' in content
+    assert "## Pessoas citadas (não participantes da chamada)" in content
+    assert "Barbara Torres" in content
 
 
 def test_therapy_mode_creates_note_with_expected_sections(tmp_path):

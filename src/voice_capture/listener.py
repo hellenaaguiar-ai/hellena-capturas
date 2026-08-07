@@ -216,6 +216,16 @@ def main() -> None:
     keyboard.add_hotkey(stop_hotkey, lambda: _safe_stop_any(config))
     logging.info("Atalho 'Parar' (qualquer modo) registrado em %s", stop_hotkey)
 
+    # Atalho extra pro MESMO modo "idea" (mesmo mode.key, mesma pasta,
+    # mesmo processamento) - so uma segunda tecla pra quem quiser separar
+    # mentalmente "tive uma ideia" de "preciso desabafar/refletir", ja que
+    # a IA classifica automaticamente o tipo de conteudo de qualquer jeito.
+    idea_mode = next((m for m in active_modes if m.key == "idea"), None)
+    reflection_hotkey = config.hotkeys.get("reflection")
+    if idea_mode is not None and reflection_hotkey:
+        keyboard.add_hotkey(reflection_hotkey, lambda: _safe_toggle(config, idea_mode))
+        logging.info("Atalho alternativo para '%s' (reflexão/desabafo) registrado em %s", idea_mode.label, reflection_hotkey)
+
     logging.info("Listener ativo. Use o icone na bandeja do sistema para encerrar.")
 
     # keyboard.wait() bloqueia para sempre - roda em segundo plano para o

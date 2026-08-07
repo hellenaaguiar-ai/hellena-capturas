@@ -16,6 +16,18 @@ DEFAULT_HOTKEYS = {
     "therapy": "ctrl+alt+t",
     "class": "ctrl+alt+a",
     "stop": "ctrl+alt+p",
+    # Atalho extra pro MESMO modo "idea" (mesma pasta, mesmo processamento -
+    # a IA ja classifica reflexao/desabafo/mudanca de pensamento
+    # automaticamente). So um segundo jeito de acionar, pra separar na
+    # cabeca "tive uma ideia" de "preciso desabafar/refletir". Nao pode
+    # conter ctrl+space junto (colidiria com o atalho "idea" - a biblioteca
+    # de atalhos dispara os dois juntos nesse caso).
+    # Usa Caps Lock por pedido explicito - efeito colateral conhecido: o
+    # Windows pode ligar/desligar o Caps Lock de verdade ao apertar essa
+    # combinacao (isso e o sistema operacional reagindo a tecla fisica, a
+    # biblioteca de atalhos nao consegue suprimir isso). Se incomodar,
+    # trocar aqui (ou no config.yaml) para algo como "ctrl+alt+d" resolve.
+    "reflection": "caps lock+d",
 }
 
 

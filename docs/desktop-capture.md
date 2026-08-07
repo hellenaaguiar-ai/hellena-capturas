@@ -25,6 +25,7 @@ Um hotkey diferente por modo (sem seletor no meio, sem clique extra):
 | Terapia | `Ctrl+Alt+T` | Sim | Sim — o que toca no computador |
 | Aula | `Ctrl+Alt+A` | **Não** | Sim — o que toca no computador |
 | **Parar** (qualquer modo) | `Ctrl+Alt+P` | — | — |
+| **Reflexão** (atalho extra pro modo Ideia) | `Caps Lock+D` | Sim | Não |
 
 Aula é o único modo que não grava seu microfone: você está assistindo, não
 falando, então não há o que capturar do seu lado — só o áudio da aula em si
@@ -36,8 +37,19 @@ igual ao comportamento do Atalho no iPhone. Além disso existe um atalho à
 parte, **Parar**, que encerra qualquer gravação em andamento sem precisar
 lembrar qual dos quatro você usou para começar — útil se você apertou
 `Ctrl+Alt+R` mas não tem certeza, por exemplo. Se nada estiver gravando,
-apertar Parar não faz nada. Todos os cinco atalhos e os nomes/pastas dos
+apertar Parar não faz nada. Todos os seis atalhos e os nomes/pastas dos
 quatro modos são configuráveis em `config.yaml`, sem precisar mexer em código.
+
+**Reflexão** não é um modo novo de verdade — é um segundo atalho pro
+próprio modo Ideia (mesma pasta, mesmo processamento). A IA já classifica
+sozinha o tipo de conteúdo (ideia, reflexão, desabafo, mudança de
+pensamento, nota de terapia, etc.), então não fazia sentido duplicar toda
+a lógica só pra ter uma tecla separada — só registramos um segundo atalho
+apontando pro mesmo modo. `Caps Lock+D` foi escolhido a pedido explícito;
+vale registrar que apertar essa combinação pode ligar/desligar o Caps Lock
+de verdade no teclado (efeito do próprio Windows reagindo à tecla física,
+a biblioteca de atalhos não consegue suprimir isso) — se incomodar, trocar
+`hotkeys.reflection` no `config.yaml` para algo como `"ctrl+alt+d"` resolve.
 
 Considerei usar AutoHotkey (mais robusto historicamente para hotkeys no
 Windows) em vez da biblioteca Python `keyboard`, mas isso significaria
@@ -143,7 +155,13 @@ Reaproveita o vault do Second Brain já configurado:
   de `mobile-voice`.
 - **Reunião** → pasta própria (`Inbox/Reuniões` por padrão), nota tipo
   `meeting-capture`: resumo, decisões, itens de ação, e as duas transcrições
-  (você / outros participantes).
+  (você / outros participantes). Distingue **participantes** (quem
+  realmente estava na chamada — só entra aqui quando há evidência direta
+  na fala, tipo ser endereçado pelo nome) de **pessoas citadas** (nomes
+  mencionados como referência/exemplo durante a conversa, sem terem
+  participado) — evitar misturar as duas foi um ajuste feito depois de um
+  caso real em que nomes só citados de passagem apareciam como se fossem
+  participantes.
 - **Terapia** → pasta própria (`Inbox/Terapia` por padrão), nota tipo
   `therapy-capture`: síntese da sessão, temas abordados, percepções,
   encaminhamentos, e as duas transcrições (você / terapeuta).

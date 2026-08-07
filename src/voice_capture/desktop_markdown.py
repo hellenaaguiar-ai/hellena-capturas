@@ -43,7 +43,8 @@ def build_meeting_markdown(processed: ProcessedMeeting, mic_text: str, system_te
             "processing_status: done",
             f"confidence: {CONFIDENCE_DISPLAY[confidence_key]}",
             f"needs_review: {'true' if needs_review else 'false'}",
-            f"participants: {_yaml_list(processed.participants_mentioned)}",
+            f"participants: {_yaml_list(processed.participants)}",
+            f"people_mentioned: {_yaml_list(processed.people_mentioned)}",
             f"audio_file_mic: {meta.mic_audio_path}",
             f"audio_file_system: {meta.system_audio_path or ''}",
             f"transcription_model: {meta.transcription_model}",
@@ -68,6 +69,9 @@ def build_meeting_markdown(processed: ProcessedMeeting, mic_text: str, system_te
 
 ## Perguntas em aberto
 {_bullets(processed.open_questions)}
+
+## Pessoas citadas (não participantes da chamada)
+{_bullets(processed.people_mentioned)}
 
 ## Transcrição — você (microfone)
 {mic_text or "_Sem áudio de microfone._"}

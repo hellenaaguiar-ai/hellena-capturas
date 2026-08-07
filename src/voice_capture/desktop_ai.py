@@ -35,7 +35,22 @@ entrada ja vem rotulado indicando qual trecho e de qual trilha.
 
 {COMMON_RULES}
 - Decisoes e itens de acao so entram nas listas correspondentes se foram \
-efetivamente ditos como decisao/acao, nao inferidos por voce."""
+efetivamente ditos como decisao/acao, nao inferidos por voce.
+- Distinga com cuidado "participants" de "people_mentioned" - sao coisas \
+diferentes e misturar as duas e um erro grave:
+  - "participants": so pessoas que REALMENTE estavam na chamada, falando. \
+Voce so tem evidencia direta disso quando a propria transcricao mostra a \
+pessoa sendo endereçada diretamente (ex: "obrigada, Ana", "Ana, pode \
+falar?") ou se identificando. NAO inclua alguem aqui so porque o nome foi \
+dito em algum momento - isso e "people_mentioned".
+  - "people_mentioned": nomes de pessoas citadas na conversa como \
+referencia, exemplo, terceiro, concorrente, etc - pessoas de quem se fala, \
+nao com quem se fala. A grande maioria dos nomes citados numa reuniao de \
+consultoria/mentoria cai aqui, nao em "participants".
+  - Se voce nao tem certeza se alguem realmente participou ou so foi \
+citado, coloque em "people_mentioned" (o mais conservador) e explique a \
+duvida em uncertainty_notes - nunca "promova" um nome pra participants \
+por suposicao."""
 
 MEETING_TOOL_SCHEMA = {
     "name": "structure_meeting_capture",
@@ -55,10 +70,22 @@ MEETING_TOOL_SCHEMA = {
                 "items": {"type": "string"},
                 "description": "Itens de acao explicitamente combinados. Vazio se nenhum.",
             },
-            "participants_mentioned": {
+            "participants": {
                 "type": "array",
                 "items": {"type": "string"},
-                "description": "Nomes de participantes citados no audio. Vazio se nenhum foi citado.",
+                "description": (
+                    "Pessoas que REALMENTE participaram da chamada (falaram, foram endereçadas "
+                    "diretamente, se identificaram) - nao qualquer nome citado. Vazio se nao for "
+                    "possivel identificar com confianca quem estava na chamada."
+                ),
+            },
+            "people_mentioned": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": (
+                    "Nomes de pessoas citadas/referenciadas durante a conversa (exemplo, "
+                    "referencia, terceiro) que NAO participaram da propria chamada. Vazio se nenhuma."
+                ),
             },
             "open_questions": {
                 "type": "array",
@@ -73,7 +100,8 @@ MEETING_TOOL_SCHEMA = {
             "summary",
             "decisions",
             "action_items",
-            "participants_mentioned",
+            "participants",
+            "people_mentioned",
             "open_questions",
             "confidence",
             "uncertainty_notes",
@@ -88,7 +116,8 @@ class ProcessedMeeting:
     summary: str
     decisions: list[str] = field(default_factory=list)
     action_items: list[str] = field(default_factory=list)
-    participants_mentioned: list[str] = field(default_factory=list)
+    participants: list[str] = field(default_factory=list)
+    people_mentioned: list[str] = field(default_factory=list)
     open_questions: list[str] = field(default_factory=list)
     confidence: str = "baixa"
     uncertainty_notes: str = ""
@@ -107,7 +136,8 @@ def process_meeting_transcript(labeled_text: str, api_key: str, model: str) -> P
         summary=data["summary"],
         decisions=coerce_str_list(data.get("decisions", [])),
         action_items=coerce_str_list(data.get("action_items", [])),
-        participants_mentioned=coerce_str_list(data.get("participants_mentioned", [])),
+        participants=coerce_str_list(data.get("participants", [])),
+        people_mentioned=coerce_str_list(data.get("people_mentioned", [])),
         open_questions=coerce_str_list(data.get("open_questions", [])),
         confidence=data.get("confidence", "baixa"),
         uncertainty_notes=data.get("uncertainty_notes", ""),
