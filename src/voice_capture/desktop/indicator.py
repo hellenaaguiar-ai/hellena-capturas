@@ -51,23 +51,26 @@ def _run_gui() -> None:
     label.pack()
 
     def reposition() -> None:
+        # Solta qualquer tamanho fixado manualmente antes (geometry("") =
+        # devolve o controle pro gerenciador de layout) e so DEPOIS mede -
+        # sem isso, uma vez que a janela tem um tamanho explicito (que
+        # hide() define pra mover ela pra fora da tela), o Tkinter para de
+        # recalcular o tamanho sozinho e ela fica travada nesse tamanho
+        # antigo pra sempre, mesmo com texto novo maior/menor.
+        root.geometry("")
         root.update_idletasks()
-        width, height = root.winfo_width(), root.winfo_height()
+        width, height = root.winfo_reqwidth(), root.winfo_reqheight()
         screen_w, screen_h = root.winfo_screenwidth(), root.winfo_screenheight()
         x = screen_w - width - 24
         y = screen_h - height - 60
         root.geometry(f"{width}x{height}+{x}+{y}")
 
     def hide() -> None:
-        # Move pra bem fora da tela em vez de root.withdraw(). Uma janela
-        # "withdrawn" no Tkinter as vezes reporta o tamanho errado
-        # (menor/cortado) na proxima vez que e mostrada de novo, porque o
-        # gerenciador de geometria nao recalculou o tamanho de verdade
-        # enquanto ela estava escondida - foi exatamente o que causou a
-        # janelinha aparecer cortada/estreita. Mantendo ela sempre
-        # "mapeada" (so que fora da area visivel), o tamanho calculado em
-        # reposition() sempre reflete o conteudo atual de verdade.
-        root.geometry("1x1+-2000+-2000")
+        # So reposiciona (sem "WxH" na string) - move pra bem fora da tela
+        # em vez de root.withdraw(), mas sem fixar um tamanho explicito
+        # (isso e o que evita o problema de travar o tamanho, descrito
+        # acima em reposition()).
+        root.geometry("+-2000+-2000")
 
     # comeca fora da tela, ja mapeada (nunca usamos withdraw/deiconify)
     hide()
