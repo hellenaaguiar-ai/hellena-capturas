@@ -112,6 +112,21 @@ pytest
 Os testes usam transcrição e chamada à Claude API mockadas — não exigem
 modelo Whisper baixado nem chave de API real para rodar.
 
+## Falas espontâneas sobre livros
+
+O Hellena Captures preserva a transcrição bruta de toda gravação. Quando a fala
+é sobre um livro e o título aparece de forma explícita e inequívoca na própria
+transcrição, o texto falado é acrescentado em `## Insights` na nota do livro.
+Não são criados campos vazios, formulários ou reflexões inferidas. Se a nota
+ainda não existir, ela nasce mínima, apenas com título, data, tag e a fala.
+
+Quando o título não está claro, ou mais de uma nota existente pode corresponder
+ao título, a captura permanece em `Inbox/Voz`. Não existe pasta intermediária de
+pendências. A importação de grifos por `kindle-cabo` continua independente e uma
+nota que contém somente dados básicos e grifos é um estado completo e normal.
+O fluxo antigo `narrar-livro`, baseado em Granola e preenchimento posterior, está
+descontinuado; gravações espontâneas agora são responsabilidade deste pipeline.
+
 ## Escopo do MVP e o que fica para depois
 
 Ver seção 4 de [ARCHITECTURE.md](ARCHITECTURE.md). Resumo: este projeto

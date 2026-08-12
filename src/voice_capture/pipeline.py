@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
 
+from .book_notes import AmbiguousBookNoteError, append_spoken_capture
 from .config import Config
 from .hashing import sha256_file
 from .markdown_writer import NoteMeta, build_filename, build_markdown, write_note_atomic
@@ -101,9 +102,22 @@ def process_item(
             transcription_model=f"faster-whisper-{config.whisper_model}",
             processing_model=config.anthropic_model,
         )
-        markdown = build_markdown(processed, transcript.text, meta)
-        filename = build_filename(recorded_at, processed.title)
-        final_path = write_note_atomic(config.vault_inbox_dir, filename, markdown)
+        route_to_book = bool(processed.book_title and processed.book_title_confidence == "alta")
+        if route_to_book:
+            try:
+                final_path = append_spoken_capture(
+                    config.resolved_vault_books_dir,
+                    processed.book_title,
+                    transcript.text,
+                    recorded_at,
+                )
+            except AmbiguousBookNoteError:
+                route_to_book = False
+
+        if not route_to_book:
+            markdown = build_markdown(processed, transcript.text, meta)
+            filename = build_filename(recorded_at, processed.title)
+            final_path = write_note_atomic(config.vault_inbox_dir, filename, markdown)
 
         item.status = STATUS_DONE
         item.note_path = str(final_path)

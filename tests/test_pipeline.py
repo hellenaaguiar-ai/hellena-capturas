@@ -121,3 +121,40 @@ def test_process_item_different_content_same_name_is_not_deduped(tmp_path):
     assert result1 == "done"
     assert result2 == "done"
     assert len(state.all_items()) == 2
+
+
+def test_clear_book_title_routes_raw_transcript_to_book_note(tmp_path):
+    config = make_config(tmp_path)
+    state = StateStore(config.state_file)
+    audio_path = make_audio_file(config)
+
+    def process_book(raw_text: str, api_key: str, model: str) -> ProcessedCapture:
+        result = fake_process(raw_text, api_key, model)
+        result.book_title = "A Empregada"
+        result.book_title_confidence = "alta"
+        return result
+
+    result = process_item(audio_path, config, state, transcribe_fn=fake_transcribe, process_fn=process_book)
+
+    assert result == "done"
+    assert list(config.vault_inbox_dir.glob("*.md")) == []
+    books = list(config.resolved_vault_books_dir.glob("*.md"))
+    assert len(books) == 1
+    assert "Esse personagem interpreta o controle como cuidado." in books[0].read_text(encoding="utf-8")
+
+
+def test_unclear_book_title_stays_in_voice_inbox(tmp_path):
+    config = make_config(tmp_path)
+    state = StateStore(config.state_file)
+    audio_path = make_audio_file(config)
+
+    def process_unclear(raw_text: str, api_key: str, model: str) -> ProcessedCapture:
+        result = fake_process(raw_text, api_key, model)
+        result.book_title = "Talvez um livro"
+        result.book_title_confidence = "baixa"
+        return result
+
+    process_item(audio_path, config, state, transcribe_fn=fake_transcribe, process_fn=process_unclear)
+
+    assert len(list(config.vault_inbox_dir.glob("*.md"))) == 1
+    assert list(config.resolved_vault_books_dir.glob("*.md")) == []

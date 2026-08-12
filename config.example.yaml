@@ -8,6 +8,11 @@ inbox_dir: "G:\\Meu Drive\\VoiceCaptures\\inbox"
 # Pasta dentro do seu vault do Obsidian onde as notas processadas vao aparecer.
 vault_inbox_dir: "C:\\Users\\Hellena\\ObsidianVault\\Inbox\\Voz"
 
+# Biblioteca plana do vault. Capturas espontaneas sobre um livro so vao para
+# essa pasta quando o titulo estiver explicito e inequivoco na propria fala.
+# Se omitido, usa "📚 Livros" na raiz do mesmo vault de vault_inbox_dir.
+vault_books_dir: "C:\\Users\\Hellena\\ObsidianVault\\📚 Livros"
+
 # Onde o pipeline guarda estado, audio arquivado e transcricoes brutas.
 # Pode ser relativo (fica dentro do repositorio) ou absoluto.
 data_dir: "data"

@@ -56,6 +56,11 @@ deixar um campo vazio.
 - Se a classificacao ou o assunto estiver ambiguo, use confidence "baixa" e \
 explique a ambiguidade em uncertainty_notes, em vez de forcar uma classificacao \
 confiante.
+- book_title so pode conter o titulo de um livro quando a gravacao for de fato \
+sobre esse livro e o titulo tiver sido dito ou estiver inequivocamente presente \
+na propria transcricao. Nao deduza o titulo por personagem, trama, autora ou \
+contexto externo. Se houver qualquer ambiguidade, use string vazia e \
+book_title_confidence "baixa".
 
 possible_uses so pode conter itens desta lista fixa (pode ser uma lista vazia \
 se nada se aplicar claramente):
@@ -124,6 +129,15 @@ TOOL_SCHEMA = {
                 "type": "string",
                 "description": "Explicacao do que esta ambiguo, se confidence for baixa. String vazia se nao houver.",
             },
+            "book_title": {
+                "type": "string",
+                "description": "Titulo explicito e inequivoco do livro sobre o qual a pessoa fala. String vazia se nao estiver claro.",
+            },
+            "book_title_confidence": {
+                "type": "string",
+                "enum": CONFIDENCE_LEVELS,
+                "description": "Alta somente quando o titulo do livro estiver explicito e inequivoco na transcricao.",
+            },
         },
         "required": [
             "title",
@@ -137,6 +151,8 @@ TOOL_SCHEMA = {
             "confidence",
             "related_topics",
             "uncertainty_notes",
+            "book_title",
+            "book_title_confidence",
         ],
     },
 }
@@ -155,6 +171,8 @@ class ProcessedCapture:
     confidence: str = "baixa"
     related_topics: list[str] = field(default_factory=list)
     uncertainty_notes: str = ""
+    book_title: str = ""
+    book_title_confidence: str = "baixa"
 
 
 def process_transcript(raw_text: str, api_key: str, model: str) -> ProcessedCapture:
@@ -177,4 +195,6 @@ def process_transcript(raw_text: str, api_key: str, model: str) -> ProcessedCapt
         confidence=data.get("confidence", "baixa"),
         related_topics=coerce_str_list(data.get("related_topics", [])),
         uncertainty_notes=data.get("uncertainty_notes", ""),
+        book_title=data.get("book_title", "").strip(),
+        book_title_confidence=data.get("book_title_confidence", "baixa"),
     )

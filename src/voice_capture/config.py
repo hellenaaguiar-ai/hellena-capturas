@@ -46,6 +46,13 @@ class Config:
     vault_reflection_dir: Path
     hotkeys: dict = field(default_factory=lambda: dict(DEFAULT_HOTKEYS))
     whisper_initial_prompt: str = ""
+    vault_books_dir: Path | None = None
+
+    @property
+    def resolved_vault_books_dir(self) -> Path:
+        if self.vault_books_dir is not None:
+            return self.vault_books_dir
+        return self.vault_inbox_dir.parent.parent / "📚 Livros"
 
     @property
     def audio_archive_dir(self) -> Path:
@@ -83,6 +90,7 @@ class Config:
             self.audio_archive_dir,
             self.transcripts_raw_dir,
             self.desktop_audio_dir,
+            self.resolved_vault_books_dir,
         ):
             d.mkdir(parents=True, exist_ok=True)
 
@@ -124,4 +132,5 @@ def load_config(path: Path | str = DEFAULT_CONFIG_PATH) -> Config:
         vault_class_dir=Path(desktop_raw.get("vault_class_dir", vault_inbox_dir.parent / "Aulas")),
         vault_reflection_dir=Path(desktop_raw.get("vault_reflection_dir", vault_inbox_dir.parent / "Reflexões")),
         hotkeys=hotkeys,
+        vault_books_dir=Path(raw["vault_books_dir"]) if raw.get("vault_books_dir") else None,
     )
