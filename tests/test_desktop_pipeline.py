@@ -2,6 +2,8 @@ import wave
 from datetime import datetime
 from pathlib import Path
 
+import yaml
+
 from voice_capture.config import Config
 from voice_capture.desktop.modes import get_mode
 from voice_capture.desktop_ai import ProcessedClass, ProcessedMeeting, ProcessedReflection, ProcessedTherapy
@@ -69,7 +71,9 @@ def fake_therapy_process(labeled_text: str, api_key: str, model: str) -> Process
         session_summary="Conversa sobre organização do dia a dia.",
         themes=["rotina"],
         insights=["percebi que adio tarefas quando estou ansiosa"],
-        follow_ups=["Anotar horários de sono"],
+        important_points=["A rotina tem afetado o descanso"],
+        therapist_highlights=["Como você se sente quando isso acontece?"],
+        revisit_topics=["Relação entre rotina e descanso"],
         confidence="media",
         uncertainty_notes="",
     )
@@ -130,8 +134,41 @@ def test_therapy_mode_creates_note_with_expected_sections(tmp_path):
     notes = list(mode.vault_dir.glob("*.md"))
     content = notes[0].read_text(encoding="utf-8")
     assert "type: therapy-capture" in content
-    assert "## Percepções expressas na sessão" in content
+    assert "elegivel_gbrain: false" in content
+    assert "has_client_audio: true" in content
+    assert "has_therapist_audio: true" in content
+    assert "## Falas e perguntas da psicóloga" in content
+    assert "Como você se sente quando isso acontece?" in content
+    assert "## Percepções que expressei" in content
     assert "adio tarefas quando estou ansiosa" in content
+    assert "## Temas que podem ser retomados" in content
+    assert "- [ ]" not in content
+    assert "> [!quote]- Minha transcrição (microfone)" in content
+    assert "> [!quote]- Transcrição da psicóloga (áudio do sistema)" in content
+
+
+def test_therapy_frontmatter_accepts_quotes_inside_themes(tmp_path):
+    config = make_config(tmp_path)
+    state = StateStore(config.state_file)
+    mode = get_mode(config, "therapy")
+    mic_path = make_silent_wav(config.desktop_audio_dir / "therapy-mic-quotes.wav")
+    system_path = make_silent_wav(config.desktop_audio_dir / "therapy-system-quotes.wav")
+
+    def process_with_quotes(labeled_text: str, api_key: str, model: str) -> ProcessedTherapy:
+        result = fake_therapy_process(labeled_text, api_key, model)
+        result.themes = ['Leitura de "O pequeno caderno"']
+        return result
+
+    result = process_desktop_recording(
+        mode, mic_path, system_path, datetime(2026, 7, 23, 19, 0), config, state,
+        transcribe_fn=fake_transcribe, process_therapy_fn=process_with_quotes,
+    )
+
+    assert result == "done"
+    content = next(mode.vault_dir.glob("*.md")).read_text(encoding="utf-8")
+    frontmatter = content.split("---", 2)[1]
+    parsed = yaml.safe_load(frontmatter)
+    assert parsed["themes"] == ['Leitura de "O pequeno caderno"']
 
 
 def test_desktop_recording_is_idempotent(tmp_path):

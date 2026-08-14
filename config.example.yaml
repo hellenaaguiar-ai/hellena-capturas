@@ -6,7 +6,7 @@
 inbox_dir: "G:\\Meu Drive\\VoiceCaptures\\inbox"
 
 # Pasta dentro do seu vault do Obsidian onde as notas processadas vao aparecer.
-vault_inbox_dir: "C:\\Users\\Hellena\\ObsidianVault\\Inbox\\Voz"
+vault_inbox_dir: "C:\\Universo Hellena\\Hellena's Second Brain\\Inbox\\Ideias"
 
 # Biblioteca plana do vault. Capturas espontaneas sobre um livro so vao para
 # essa pasta quando o titulo estiver explicito e inequivoco na propria fala.

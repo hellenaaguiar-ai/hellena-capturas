@@ -13,7 +13,10 @@ from pathlib import Path
 from typing import Callable
 
 from .book_notes import AmbiguousBookNoteError, append_spoken_capture
+from .capture_types import CAPTURE_REFLECTION, detect_capture_type
 from .config import Config
+from .desktop_ai import ProcessedReflection, process_reflection_transcript
+from .desktop_markdown import DesktopNoteMeta, build_reflection_markdown
 from .hashing import sha256_file
 from .markdown_writer import NoteMeta, build_filename, build_markdown, write_note_atomic
 from .process_ai import ProcessedCapture, process_transcript
@@ -22,6 +25,7 @@ from .transcribe import TranscriptResult, transcribe_audio
 
 TranscribeFn = Callable[[Path, str, str, str], TranscriptResult]
 ProcessFn = Callable[[str, str, str], ProcessedCapture]
+ReflectionProcessFn = Callable[[str, str, str], ProcessedReflection]
 
 _RECORDED_AT_RE = re.compile(r"(\d{4}-\d{2}-\d{2}) (\d{2})-(\d{2})-(\d{2})")
 
@@ -49,6 +53,7 @@ def process_item(
     state: StateStore,
     transcribe_fn: TranscribeFn = transcribe_audio,
     process_fn: ProcessFn = process_transcript,
+    reflection_process_fn: ReflectionProcessFn = process_reflection_transcript,
 ) -> str:
     content_hash = sha256_file(audio_path)
 
@@ -79,12 +84,15 @@ def process_item(
         state.upsert(content_hash, item)
         state.save()
 
-        transcript = transcribe_fn(
-            archive_path, config.whisper_model, config.whisper_language, config.whisper_initial_prompt
-        )
-
         transcript_path = config.transcripts_raw_dir / f"{content_hash}.txt"
-        transcript_path.write_text(transcript.text, encoding="utf-8")
+        if transcript_path.exists() and transcript_path.stat().st_size > 0:
+            transcript_text = transcript_path.read_text(encoding="utf-8")
+        else:
+            transcript = transcribe_fn(
+                archive_path, config.whisper_model, config.whisper_language, config.whisper_initial_prompt
+            )
+            transcript_text = transcript.text
+            transcript_path.write_text(transcript_text, encoding="utf-8")
         item.transcript_raw_path = str(transcript_path)
 
         item.status = STATUS_PROCESSING
@@ -92,32 +100,57 @@ def process_item(
         state.upsert(content_hash, item)
         state.save()
 
-        processed = process_fn(transcript.text, config.anthropic_api_key, config.anthropic_model)
+        capture_type = detect_capture_type(audio_path)
+        if capture_type == CAPTURE_REFLECTION:
+            processed_reflection = reflection_process_fn(
+                transcript_text, config.anthropic_api_key, config.anthropic_model
+            )
+            reflection_meta = DesktopNoteMeta(
+                content_hash=content_hash,
+                created_at=datetime.now().astimezone(),
+                recorded_at=recorded_at,
+                mic_audio_path=str(archive_path),
+                system_audio_path=None,
+                transcription_model=f"faster-whisper-{config.whisper_model}",
+                processing_model=config.anthropic_model,
+                source="mobile-voice",
+            )
+            markdown = build_reflection_markdown(
+                processed_reflection, transcript_text, reflection_meta
+            )
+            filename = build_filename(recorded_at, processed_reflection.title)
+            final_path = write_note_atomic(config.vault_reflection_dir, filename, markdown)
+        else:
+            processed = process_fn(
+                transcript_text, config.anthropic_api_key, config.anthropic_model
+            )
 
-        meta = NoteMeta(
-            content_hash=content_hash,
-            created_at=datetime.now().astimezone(),
-            recorded_at=recorded_at,
-            audio_archive_path=str(archive_path),
-            transcription_model=f"faster-whisper-{config.whisper_model}",
-            processing_model=config.anthropic_model,
-        )
-        route_to_book = bool(processed.book_title and processed.book_title_confidence == "alta")
-        if route_to_book:
-            try:
-                final_path = append_spoken_capture(
-                    config.resolved_vault_books_dir,
-                    processed.book_title,
-                    transcript.text,
-                    recorded_at,
-                )
-            except AmbiguousBookNoteError:
-                route_to_book = False
+            meta = NoteMeta(
+                content_hash=content_hash,
+                created_at=datetime.now().astimezone(),
+                recorded_at=recorded_at,
+                audio_archive_path=str(archive_path),
+                transcription_model=f"faster-whisper-{config.whisper_model}",
+                processing_model=config.anthropic_model,
+            )
+            route_to_book = bool(
+                processed.book_title and processed.book_title_confidence == "alta"
+            )
+            if route_to_book:
+                try:
+                    final_path = append_spoken_capture(
+                        config.resolved_vault_books_dir,
+                        processed.book_title,
+                        transcript_text,
+                        recorded_at,
+                    )
+                except AmbiguousBookNoteError:
+                    route_to_book = False
 
-        if not route_to_book:
-            markdown = build_markdown(processed, transcript.text, meta)
-            filename = build_filename(recorded_at, processed.title)
-            final_path = write_note_atomic(config.vault_inbox_dir, filename, markdown)
+            if not route_to_book:
+                markdown = build_markdown(processed, transcript_text, meta)
+                filename = build_filename(recorded_at, processed.title)
+                final_path = write_note_atomic(config.vault_inbox_dir, filename, markdown)
 
         item.status = STATUS_DONE
         item.note_path = str(final_path)

@@ -4,35 +4,39 @@ Objetivo: 1 toque (sem precisar desbloquear o telefone, se seu modelo tiver
 Botão de Ação) para começar a gravar, 1 toque para parar, e pronto — o áudio já
 está a caminho do pipeline.
 
-## 1. Instalar/configurar o Google Drive no iPhone
+## 1. Pasta de transporte no iCloud Drive
 
-1. Instale o app **Google Drive** (se ainda não tiver).
-2. Entre com a mesma conta Google que você vai usar no computador Windows.
-3. Nas configurações do app Google Drive, ative **"Ativar integração com
-   Arquivos"** (Files) — isso faz o Google Drive aparecer como um local
-   disponível no app Arquivos do iOS, o que o Atalho precisa para salvar lá.
-4. No app **Arquivos** do iPhone, dentro do Google Drive, crie a pasta:
-   `VoiceCaptures/inbox`
+No app **Arquivos** do iPhone, dentro do iCloud Drive, use a pasta
+`VoiceCaptures/Inbox`. No Windows, o iCloud para Windows sincroniza essa pasta
+para `C:\Users\helle\iCloudDrive\VoiceCaptures\Inbox`.
 
 ## 2. Criar o Atalho
 
 Abra o app **Atalhos** (Shortcuts) → toque em **+** para criar um novo atalho.
-Nomeie como `Capturar Pensamento`. Adicione as ações nesta ordem:
+Crie tres atalhos: `Capturar Ideia`, `Capturar Reflexão` e
+`Capturar Insight de Livro`. As ações são iguais; muda apenas o prefixo do nome:
 
 1. **Gravar Áudio** (Record Audio)
    - Toque nas opções da ação e defina **"Parar Gravação" = "Ao Tocar
      Novamente"** (On Tap) — assim o mesmo toque que iniciou serve para
      encerrar, sem precisar de um segundo atalho.
 2. **Definir Nome** (Set Name) no resultado da gravação, algo como:
-   `Gravação [Data Atual formato yyyy-MM-dd HH-mm-ss].m4a`
+   - `IDEIA__ [Data Atual formato yyyy-MM-dd HH-mm-ss].m4a`
+   - `REFLEXAO__ [Data Atual formato yyyy-MM-dd HH-mm-ss].m4a`
+   - `LIVRO__ [Data Atual formato yyyy-MM-dd HH-mm-ss].m4a`
    - Use a ação **Data Atual** (Current Date) formatada, encadeada dentro do
      texto do nome. Isso garante nomes únicos e ordenáveis por data.
 3. **Salvar Arquivo** (Save File)
-   - Destino: `Google Drive/VoiceCaptures/inbox`
+   - Destino: `iCloud Drive/VoiceCaptures/Inbox`
    - **Desmarque** "Perguntar Onde Salvar" — isso é essencial: se o atalho
      perguntar onde salvar, você perde a captura sem toque único.
 4. **Mostrar Notificação** (Show Notification)
-   - Texto: `Pensamento salvo ✅`
+   - Texto correspondente: `Ideia salva`, `Reflexão salva` ou `Insight de livro salvo`.
+
+Ao gravar um insight de livro, diga o título no começo. Para livro físico, use
+uma formulação como: `Livro X. Página 42. Grifei: ... Isso me fez pensar...`.
+Trechos ditados ficam marcados para conferência no exemplar, pois a transcrição
+pode trocar palavras e não deve ser tratada automaticamente como citação literal.
    - Isso é a "confirmação discreta" — aparece e some, sem exigir nenhuma ação
      sua.
 

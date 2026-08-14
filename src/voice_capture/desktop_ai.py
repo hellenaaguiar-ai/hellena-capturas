@@ -239,7 +239,25 @@ trecho e de qual trilha.
 clinica. Apenas organiza o que foi dito.
 - "insights" sao percepcoes que a propria cliente expressou durante a \
 sessao (ex: "percebi que..."), nunca uma interpretacao sua do que ela \
-"realmente" quis dizer."""
+"realmente" quis dizer.
+- Esta e uma captura privada para consulta, nao um gerenciador de tarefas. \
+Nao transforme sugestoes, possibilidades ou temas da conversa em tarefas.
+- Destaque perguntas, observacoes e formulacoes relevantes do(a) terapeuta \
+em therapist_highlights, preservando que vieram do(a) terapeuta.
+- revisit_topics registra assuntos que podem ser retomados ou observados, \
+sem linguagem prescritiva e sem checkboxes.
+- Examine obrigatoriamente AS DUAS trilhas. Se a trilha do(a) terapeuta \
+contiver fala compreensivel, therapist_highlights nao pode ficar vazio.
+- Os campos sao mutuamente distintos: themes contem apenas nomes curtos de \
+assuntos; important_points contem fatos ou momentos centrais; insights contem \
+percepcoes formuladas pela cliente; therapist_highlights contem contribuicoes \
+do(a) terapeuta; revisit_topics contem fios que podem ser retomados.
+- Nao despeje insights, frases longas ou observacoes do terapeuta em themes.
+- Extraia o que estiver sustentado pela transcricao. Ser conservador significa \
+nao inventar, nao ignorar evidencias explicitas e devolver campos vazios.
+- O nome da cliente e Hellena, com dois L. Use Hellena quando estiver se \
+referindo a cliente. Nao altere o nome de terceiras pessoas que realmente se \
+chamem Helena."""
 
 THERAPY_TOOL_SCHEMA = {
     "name": "structure_therapy_capture",
@@ -254,18 +272,38 @@ THERAPY_TOOL_SCHEMA = {
             },
             "themes": {
                 "type": "array",
+                "minItems": 1,
+                "maxItems": 10,
                 "items": {"type": "string"},
-                "description": "Temas abordados na sessao, citados explicitamente.",
+                "description": "De 5 a 10 nomes curtos de assuntos abordados; sem frases, insights ou interpretacoes.",
             },
             "insights": {
                 "type": "array",
+                "minItems": 1,
+                "maxItems": 8,
                 "items": {"type": "string"},
-                "description": "Percepcoes que a propria cliente expressou durante a sessao. Vazio se nenhuma.",
+                "description": "De 3 a 8 percepcoes que a cliente formulou sobre si ou sua vida, preferencialmente em primeira pessoa. Nao duplicar em themes.",
             },
-            "follow_ups": {
+            "important_points": {
                 "type": "array",
+                "minItems": 1,
+                "maxItems": 10,
                 "items": {"type": "string"},
-                "description": "Encaminhamentos ou tarefas combinadas explicitamente na sessao. Vazio se nenhum.",
+                "description": "De 5 a 10 fatos, tensoes ou momentos concretos centrais da conversa; nao sao temas genericos nem tarefas.",
+            },
+            "therapist_highlights": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 10,
+                "items": {"type": "string"},
+                "description": "De 4 a 10 perguntas, observacoes ou formulacoes relevantes ditas pelo(a) terapeuta, em itens separados. Obrigatorio quando houver fala compreensivel na trilha do sistema.",
+            },
+            "revisit_topics": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 6,
+                "items": {"type": "string"},
+                "description": "De 2 a 6 fios da conversa que podem ser retomados ou observados; sem verbos de ordem, checkboxes ou compromissos inventados.",
             },
             "confidence": {"type": "string", "enum": CONFIDENCE_LEVELS},
             "uncertainty_notes": {"type": "string", "description": "String vazia se nao houver ambiguidade."},
@@ -275,7 +313,9 @@ THERAPY_TOOL_SCHEMA = {
             "session_summary",
             "themes",
             "insights",
-            "follow_ups",
+            "important_points",
+            "therapist_highlights",
+            "revisit_topics",
             "confidence",
             "uncertainty_notes",
         ],
@@ -289,7 +329,9 @@ class ProcessedTherapy:
     session_summary: str
     themes: list[str] = field(default_factory=list)
     insights: list[str] = field(default_factory=list)
-    follow_ups: list[str] = field(default_factory=list)
+    important_points: list[str] = field(default_factory=list)
+    therapist_highlights: list[str] = field(default_factory=list)
+    revisit_topics: list[str] = field(default_factory=list)
     confidence: str = "baixa"
     uncertainty_notes: str = ""
 
@@ -301,13 +343,16 @@ def process_therapy_transcript(labeled_text: str, api_key: str, model: str) -> P
         user_content=f"Transcricao da sessao:\n\n{labeled_text}",
         api_key=api_key,
         model=model,
+        max_tokens=4096,
     )
     return ProcessedTherapy(
         title=data["title"],
         session_summary=data["session_summary"],
         themes=coerce_str_list(data.get("themes", [])),
         insights=coerce_str_list(data.get("insights", [])),
-        follow_ups=coerce_str_list(data.get("follow_ups", [])),
+        important_points=coerce_str_list(data.get("important_points", [])),
+        therapist_highlights=coerce_str_list(data.get("therapist_highlights", [])),
+        revisit_topics=coerce_str_list(data.get("revisit_topics", [])),
         confidence=data.get("confidence", "baixa"),
         uncertainty_notes=data.get("uncertainty_notes", ""),
     )

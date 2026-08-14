@@ -35,17 +35,23 @@ def call_structured_tool(
     user_content: str,
     api_key: str,
     model: str,
+    max_tokens: int = 2048,
 ) -> dict:
     import anthropic
 
     client = anthropic.Anthropic(api_key=api_key)
     response = client.messages.create(
         model=model,
-        max_tokens=2048,
+        max_tokens=max_tokens,
         system=system_prompt,
         tools=[tool_schema],
         tool_choice={"type": "tool", "name": tool_schema["name"]},
         messages=[{"role": "user", "content": user_content}],
     )
+    if response.stop_reason == "max_tokens":
+        raise RuntimeError(
+            "Resposta da Claude interrompida pelo limite de tokens; "
+            "a captura nao sera salva como se estivesse completa."
+        )
     tool_use = next(b for b in response.content if b.type == "tool_use")
     return tool_use.input

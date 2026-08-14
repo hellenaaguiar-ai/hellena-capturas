@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from voice_capture.config import Config
+from voice_capture.desktop_ai import ProcessedReflection
 from voice_capture.pipeline import process_item
 from voice_capture.process_ai import ProcessedCapture
 from voice_capture.state import STATUS_DONE, STATUS_ERROR, StateStore
@@ -50,6 +51,15 @@ def fake_process(raw_text: str, api_key: str, model: str) -> ProcessedCapture:
 
 def failing_process(raw_text: str, api_key: str, model: str) -> ProcessedCapture:
     raise RuntimeError("Claude API indisponível")
+
+
+def fake_reflection_process(raw_text: str, api_key: str, model: str) -> ProcessedReflection:
+    return ProcessedReflection(
+        title="Reflexão móvel",
+        synthesis="Síntese fiel.",
+        themes=["tema"],
+        perceptions=["percepção expressa"],
+    )
 
 
 def make_audio_file(config: Config, name: str = "Gravação 2026-07-23 22-14-00.m4a", content: bytes = b"audio-fake-bytes") -> Path:
@@ -158,3 +168,41 @@ def test_unclear_book_title_stays_in_voice_inbox(tmp_path):
 
     assert len(list(config.vault_inbox_dir.glob("*.md"))) == 1
     assert list(config.resolved_vault_books_dir.glob("*.md")) == []
+
+
+def test_mobile_reflection_goes_to_reflections_folder(tmp_path):
+    config = make_config(tmp_path)
+    state = StateStore(config.state_file)
+    audio = make_audio_file(config, name="REFLEXAO__2026-08-12 15-30-00.m4a")
+
+    result = process_item(
+        audio,
+        config,
+        state,
+        transcribe_fn=fake_transcribe,
+        reflection_process_fn=fake_reflection_process,
+    )
+
+    assert result == "done"
+    note = next(config.vault_reflection_dir.glob("*.md"))
+    assert "type: reflection-capture" in note.read_text(encoding="utf-8")
+
+
+def test_retry_reuses_preserved_transcript(tmp_path):
+    config = make_config(tmp_path)
+    state = StateStore(config.state_file)
+    audio = make_audio_file(config)
+    calls = 0
+
+    def counting_transcribe(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        return fake_transcribe(*args, **kwargs)
+
+    assert process_item(
+        audio, config, state, transcribe_fn=counting_transcribe, process_fn=failing_process
+    ) == "error"
+    assert process_item(
+        audio, config, state, transcribe_fn=counting_transcribe, process_fn=fake_process
+    ) == "done"
+    assert calls == 1

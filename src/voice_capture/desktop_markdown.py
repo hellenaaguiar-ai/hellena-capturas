@@ -1,6 +1,7 @@
 """Monta o Markdown das notas de reflexao, reuniao, terapia e aula (modos desktop)."""
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
@@ -18,6 +19,7 @@ class DesktopNoteMeta:
     system_audio_path: Optional[str]
     transcription_model: str
     processing_model: str
+    source: str = "desktop-voice"
 
 
 def _bullets(items: list[str]) -> str:
@@ -39,7 +41,7 @@ def build_meeting_markdown(processed: ProcessedMeeting, mic_text: str, system_te
             f"id: {meta.content_hash[:16]}",
             f"created_at: {meta.created_at.isoformat()}",
             f"recorded_at: {meta.recorded_at.isoformat()}",
-            "source: desktop-voice",
+            f"source: {meta.source}",
             "processing_status: done",
             f"confidence: {CONFIDENCE_DISPLAY[confidence_key]}",
             f"needs_review: {'true' if needs_review else 'false'}",
@@ -93,8 +95,9 @@ def build_reflection_markdown(processed: ProcessedReflection, text: str, meta: D
             f"id: {meta.content_hash[:16]}",
             f"created_at: {meta.created_at.isoformat()}",
             f"recorded_at: {meta.recorded_at.isoformat()}",
-            "source: desktop-voice",
+            f"source: {meta.source}",
             "processing_status: done",
+            "elegivel_gbrain: false",
             f"confidence: {CONFIDENCE_DISPLAY[confidence_key]}",
             f"needs_review: {'true' if needs_review else 'false'}",
             f"themes: {_yaml_list(processed.themes)}",
@@ -136,11 +139,14 @@ def build_therapy_markdown(processed: ProcessedTherapy, mic_text: str, system_te
             f"id: {meta.content_hash[:16]}",
             f"created_at: {meta.created_at.isoformat()}",
             f"recorded_at: {meta.recorded_at.isoformat()}",
-            "source: desktop-voice",
+            f"source: {meta.source}",
             "processing_status: done",
+            "elegivel_gbrain: false",
             f"confidence: {CONFIDENCE_DISPLAY[confidence_key]}",
             f"needs_review: {'true' if needs_review else 'false'}",
             f"themes: {_yaml_list(processed.themes)}",
+            f"has_client_audio: {'true' if bool(meta.mic_audio_path) else 'false'}",
+            f"has_therapist_audio: {'true' if bool(meta.system_audio_path) else 'false'}",
             f"audio_file_mic: {meta.mic_audio_path}",
             f"audio_file_system: {meta.system_audio_path or ''}",
             f"transcription_model: {meta.transcription_model}",
@@ -154,23 +160,29 @@ def build_therapy_markdown(processed: ProcessedTherapy, mic_text: str, system_te
     body = f"""
 # {processed.title}
 {uncertainty_block}
-## Síntese da sessão
+## Visão geral da sessão
 {processed.session_summary}
 
-## Temas abordados
+## Assuntos mencionados
 {_bullets(processed.themes)}
 
-## Percepções expressas na sessão
+## Pontos que pareceram importantes
+{_bullets(processed.important_points)}
+
+## Falas e perguntas da psicóloga
+{_bullets(processed.therapist_highlights)}
+
+## Percepções que expressei
 {_bullets(processed.insights)}
 
-## Encaminhamentos
-{_checklist_todo(processed.follow_ups)}
+## Temas que podem ser retomados
+{_bullets(processed.revisit_topics)}
 
-## Transcrição — você (microfone)
-{mic_text or "_Sem áudio de microfone._"}
+> [!quote]- Minha transcrição (microfone)
+{_callout_text(mic_text, "Sem áudio de microfone capturado.")}
 
-## Transcrição — terapeuta (áudio do sistema)
-{system_text or "_Sem áudio do sistema capturado._"}
+> [!quote]- Transcrição da psicóloga (áudio do sistema)
+{_callout_text(system_text, "Sem áudio do sistema capturado.")}
 """
     return frontmatter + "\n" + body.strip() + "\n"
 
@@ -186,7 +198,7 @@ def build_class_markdown(processed: ProcessedClass, class_text: str, meta: Deskt
             f"id: {meta.content_hash[:16]}",
             f"created_at: {meta.created_at.isoformat()}",
             f"recorded_at: {meta.recorded_at.isoformat()}",
-            "source: desktop-voice",
+            f"source: {meta.source}",
             "processing_status: done",
             f"confidence: {CONFIDENCE_DISPLAY[confidence_key]}",
             f"needs_review: {'true' if needs_review else 'false'}",
@@ -219,7 +231,9 @@ def build_class_markdown(processed: ProcessedClass, class_text: str, meta: Deskt
 
 
 def _yaml_list(items: list[str]) -> str:
-    if not items:
-        return "[]"
-    escaped = ", ".join(f'"{i}"' for i in items)
-    return f"[{escaped}]"
+    return json.dumps(items, ensure_ascii=False)
+
+
+def _callout_text(text: str, empty_message: str) -> str:
+    content = text.strip() if text else f"_{empty_message}_"
+    return "\n".join(f"> {line}" if line else ">" for line in content.splitlines())
