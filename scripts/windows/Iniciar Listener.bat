@@ -1,3 +1,3 @@
 @echo off
-cd /d "C:\hellena-capturas"
+cd /d "%~dp0..\.."
 start "" .venv\Scripts\pythonw.exe -m voice_capture.listener

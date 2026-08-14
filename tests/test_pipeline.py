@@ -58,7 +58,7 @@ def fake_reflection_process(raw_text: str, api_key: str, model: str) -> Processe
         title="Reflexão móvel",
         synthesis="Síntese fiel.",
         themes=["tema"],
-        perceptions=["percepção expressa"],
+        insights=["percepção expressa"],
     )
 
 
@@ -206,3 +206,26 @@ def test_retry_reuses_preserved_transcript(tmp_path):
         audio, config, state, transcribe_fn=counting_transcribe, process_fn=fake_process
     ) == "done"
     assert calls == 1
+
+
+def test_automatic_retries_stop_after_three_failures_but_manual_retry_is_allowed(tmp_path):
+    config = make_config(tmp_path)
+    state = StateStore(config.state_file)
+    audio = make_audio_file(config)
+
+    for _ in range(3):
+        assert process_item(
+            audio, config, state, transcribe_fn=fake_transcribe, process_fn=failing_process
+        ) == "error"
+
+    assert process_item(
+        audio, config, state, transcribe_fn=fake_transcribe, process_fn=fake_process
+    ) == "skipped-error-limit"
+    assert process_item(
+        audio,
+        config,
+        state,
+        transcribe_fn=fake_transcribe,
+        process_fn=fake_process,
+        force=True,
+    ) == "done"

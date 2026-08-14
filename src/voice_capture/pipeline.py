@@ -27,6 +27,8 @@ TranscribeFn = Callable[[Path, str, str, str], TranscriptResult]
 ProcessFn = Callable[[str, str, str], ProcessedCapture]
 ReflectionProcessFn = Callable[[str, str, str], ProcessedReflection]
 
+MAX_AUTOMATIC_ATTEMPTS = 3
+
 _RECORDED_AT_RE = re.compile(r"(\d{4}-\d{2}-\d{2}) (\d{2})-(\d{2})-(\d{2})")
 
 
@@ -54,6 +56,7 @@ def process_item(
     transcribe_fn: TranscribeFn = transcribe_audio,
     process_fn: ProcessFn = process_transcript,
     reflection_process_fn: ReflectionProcessFn = process_reflection_transcript,
+    force: bool = False,
 ) -> str:
     content_hash = sha256_file(audio_path)
 
@@ -61,6 +64,14 @@ def process_item(
         return "skipped-duplicate"
 
     existing = state.get(content_hash)
+    if (
+        existing is not None
+        and existing.status == STATUS_ERROR
+        and existing.attempts >= MAX_AUTOMATIC_ATTEMPTS
+        and not force
+    ):
+        return "skipped-error-limit"
+
     item = existing or ItemState(
         source_filename=audio_path.name,
         first_seen_at=_now_iso(),

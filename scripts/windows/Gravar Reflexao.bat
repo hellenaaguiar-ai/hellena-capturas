@@ -1,4 +1,4 @@
 @echo off
-cd /d "C:\hellena-capturas"
+cd /d "%~dp0..\.."
 .venv\Scripts\python.exe -m voice_capture.desktop.trigger reflection
 if errorlevel 1 pause

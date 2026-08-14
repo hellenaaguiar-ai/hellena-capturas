@@ -58,7 +58,7 @@ def run_all(config: Config) -> int:
     state = StateStore(config.state_file)
     files = scan_inbox(config.inbox_dir)
 
-    processed = skipped = errors = 0
+    processed = skipped = held_errors = errors = 0
     for path in files:
         if not _is_stable(path):
             logging.info("Ignorando %s (ainda sincronizando)", path.name)
@@ -70,6 +70,9 @@ def run_all(config: Config) -> int:
             logging.info("OK: %s", path.name)
         elif result == "skipped-duplicate":
             skipped += 1
+        elif result == "skipped-error-limit":
+            held_errors += 1
+            logging.warning("Aguardando reprocessamento manual após 3 falhas: %s", path.name)
         else:
             errors += 1
             logging.error("Falhou: %s", path.name)
@@ -77,9 +80,11 @@ def run_all(config: Config) -> int:
     write_errors_note(config.error_note_path, state.errors())
 
     logging.info(
-        "Resumo: %d processado(s), %d duplicado(s) ignorado(s), %d erro(s)",
+        "Resumo: %d processado(s), %d duplicado(s) ignorado(s), "
+        "%d erro(s) aguardando reprocessamento manual, %d erro(s) novo(s)",
         processed,
         skipped,
+        held_errors,
         errors,
     )
     return 1 if errors else 0
@@ -102,7 +107,7 @@ def run_reprocess(config: Config, hash_prefix: str) -> int:
         logging.error("Audio arquivado nao encontrado para reprocessar: %s", audio_path)
         return 1
 
-    result = process_item(audio_path, config, state)
+    result = process_item(audio_path, config, state, force=True)
     write_errors_note(config.error_note_path, state.errors())
     logging.info("Reprocessamento de %s: %s", content_hash[:16], result)
     return 0 if result == "done" else 1
