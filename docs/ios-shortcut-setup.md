@@ -74,3 +74,29 @@ Ajustes → Centro de Controle → adicione **Atalho** e associe a
 
 A partir daqui, o pipeline no Windows (ver `docs/windows-setup.md`) assume o
 resto sozinho.
+
+## 5. Reuniões longas pelo compartilhamento
+
+O atalho `Registrar Reunião` recebe uma gravação pela Folha de
+Compartilhamento, pergunta com quem foi a reunião e salva o arquivo em
+`iCloud Drive/VoiceCaptures/Reuniões`, com nome semelhante a
+`REUNIÃO - Eduarda - 14_08_2026, 12_00.m4a`.
+
+Esta pasta é uma exceção deliberada ao Whisper local: somente seus arquivos são
+enviados à OpenAI para transcrição rápida com separação por falante. O áudio
+bruto continua arquivado e a resposta completa da transcrição é preservada em
+`data/transcripts_raw` antes da criação da nota.
+
+### Cadastrar a voz da Hellena
+
+1. No Gravador do iPhone, grave de 5 a 10 segundos com apenas a Hellena falando,
+   sem música, eco forte ou outra voz. Use uma frase natural, não apenas o nome.
+2. Salve como `Hellena.m4a` em
+   `iCloud Drive/VoiceCaptures/Referencias`.
+3. O pipeline envia essa amostra junto da reunião como referência acústica. Se
+   houver correspondência, os trechos recebem o rótulo `Hellena`; os demais
+   continuam como `A`, `B` etc.
+
+O nome digitado no atalho descreve com quem foi a reunião, mas não prova qual
+voz pertence àquela pessoa. O pipeline nunca atribui identidade pelo nome do
+arquivo e nunca força o rótulo `Hellena` quando a API não reconhece a amostra.

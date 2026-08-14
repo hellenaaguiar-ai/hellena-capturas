@@ -5,6 +5,17 @@
 # salva os audios (ver docs/ios-shortcut-setup.md).
 inbox_dir: "G:\\Meu Drive\\VoiceCaptures\\inbox"
 
+# Exceção deliberada: somente os áudios salvos nesta pasta são enviados à
+# OpenAI para transcrição rápida com separação por falante. As demais capturas
+# continuam usando Whisper local. A chave vem de OPENAI_API_KEY no ambiente.
+meeting_inbox_dir: "C:\\Users\\Hellena\\iCloudDrive\\VoiceCaptures\\Reuniões"
+meeting_transcription_model: "gpt-4o-transcribe-diarize"
+
+# Amostra limpa de 2 a 10 segundos, com apenas a voz da Hellena. Quando a API
+# não reconhecer com segurança, mantém A/B; o sistema não força identidade.
+speaker_reference_path: "C:\\Users\\Hellena\\iCloudDrive\\VoiceCaptures\\Referencias\\Hellena.m4a"
+known_speaker_name: "Hellena"
+
 # Pasta dentro do seu vault do Obsidian onde as notas processadas vao aparecer.
 vault_inbox_dir: "C:\\Universo Hellena\\Hellena's Second Brain\\Inbox\\Ideias"
 

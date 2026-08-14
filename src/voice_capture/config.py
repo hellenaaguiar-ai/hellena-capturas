@@ -47,12 +47,21 @@ class Config:
     hotkeys: dict = field(default_factory=lambda: dict(DEFAULT_HOTKEYS))
     whisper_initial_prompt: str = ""
     vault_books_dir: Path | None = None
+    meeting_inbox_dir: Path | None = None
+    openai_api_key: str = ""
+    meeting_transcription_model: str = "gpt-4o-transcribe-diarize"
+    speaker_reference_path: Path | None = None
+    known_speaker_name: str = "Hellena"
 
     @property
     def resolved_vault_books_dir(self) -> Path:
         if self.vault_books_dir is not None:
             return self.vault_books_dir
         return self.vault_inbox_dir.parent.parent / "📚 Livros"
+
+    @property
+    def resolved_meeting_inbox_dir(self) -> Path:
+        return self.meeting_inbox_dir or self.inbox_dir.parent / "Reuniões"
 
     @property
     def audio_archive_dir(self) -> Path:
@@ -91,6 +100,7 @@ class Config:
             self.transcripts_raw_dir,
             self.desktop_audio_dir,
             self.resolved_vault_books_dir,
+            self.resolved_meeting_inbox_dir,
         ):
             d.mkdir(parents=True, exist_ok=True)
 
@@ -133,4 +143,15 @@ def load_config(path: Path | str = DEFAULT_CONFIG_PATH) -> Config:
         vault_reflection_dir=Path(desktop_raw.get("vault_reflection_dir", vault_inbox_dir.parent / "Reflexões")),
         hotkeys=hotkeys,
         vault_books_dir=Path(raw["vault_books_dir"]) if raw.get("vault_books_dir") else None,
+        meeting_inbox_dir=Path(raw["meeting_inbox_dir"]) if raw.get("meeting_inbox_dir") else None,
+        openai_api_key=os.environ.get("OPENAI_API_KEY", ""),
+        meeting_transcription_model=raw.get(
+            "meeting_transcription_model", "gpt-4o-transcribe-diarize"
+        ),
+        speaker_reference_path=(
+            Path(raw["speaker_reference_path"])
+            if raw.get("speaker_reference_path")
+            else None
+        ),
+        known_speaker_name=raw.get("known_speaker_name", "Hellena"),
     )

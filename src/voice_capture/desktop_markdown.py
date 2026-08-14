@@ -84,6 +84,53 @@ def build_meeting_markdown(processed: ProcessedMeeting, mic_text: str, system_te
     return frontmatter + "\n" + body.strip() + "\n"
 
 
+def build_mobile_meeting_markdown(processed: ProcessedMeeting, labeled_text: str, meta: DesktopNoteMeta) -> str:
+    """Reunião de uma trilha só; os falantes vêm da diarização, não de canais."""
+    confidence_key = processed.confidence if processed.confidence in CONFIDENCE_DISPLAY else "baixa"
+    frontmatter = "\n".join(
+        [
+            "---",
+            "type: meeting-capture",
+            f"id: {meta.content_hash[:16]}",
+            f"created_at: {meta.created_at.isoformat()}",
+            f"recorded_at: {meta.recorded_at.isoformat()}",
+            f"source: {meta.source}",
+            "processing_status: done",
+            f"confidence: {CONFIDENCE_DISPLAY[confidence_key]}",
+            f"needs_review: {'true' if confidence_key == 'baixa' else 'false'}",
+            f"participants: {_yaml_list(processed.participants)}",
+            f"people_mentioned: {_yaml_list(processed.people_mentioned)}",
+            f"audio_file: {meta.mic_audio_path or ''}",
+            f"transcription_model: {meta.transcription_model}",
+            f"processing_model: {meta.processing_model}",
+            "---",
+        ]
+    )
+    uncertainty = f"\n> ⚠️ {processed.uncertainty_notes}\n" if processed.uncertainty_notes else ""
+    body = f"""
+# {processed.title}
+{uncertainty}
+## Resumo
+{processed.summary}
+
+## Decisões
+{_bullets(processed.decisions)}
+
+## Itens de ação
+{_checklist_todo(processed.action_items)}
+
+## Perguntas em aberto
+{_bullets(processed.open_questions)}
+
+## Pessoas citadas (não participantes da chamada)
+{_bullets(processed.people_mentioned)}
+
+## Transcrição por falante
+{labeled_text or "_Sem transcrição._"}
+"""
+    return frontmatter + "\n" + body.strip() + "\n"
+
+
 def build_reflection_markdown(processed: ProcessedReflection, text: str, meta: DesktopNoteMeta) -> str:
     confidence_key = processed.confidence if processed.confidence in CONFIDENCE_DISPLAY else "baixa"
     needs_review = confidence_key == "baixa"

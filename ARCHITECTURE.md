@@ -67,6 +67,13 @@ precisamos reinventar isso.
 isso pesa mais que a diferença de velocidade/precisão, e seu computador "quase
 sempre ligado" torna a limitação de custo computacional irrelevante.
 
+**Exceção aprovada em 2026-08-14:** áudios colocados explicitamente em
+`VoiceCaptures/Reuniões` usam `gpt-4o-transcribe-diarize` na OpenAI, porque
+reuniões longas precisam de menor latência e separação de falantes. Nenhuma
+outra pasta usa essa exceção: terapia, ideias, reflexões e livros continuam com
+Whisper local. Uma amostra curta de voz pode identificar Hellena; quando não há
+correspondência segura, os falantes permanecem anônimos (`A`, `B` etc.).
+
 ### 2.4 Processamento por IA (síntese/classificação)
 
 Aqui **só o texto já transcrito** trafega, nunca o áudio — o risco de exposição é
@@ -340,7 +347,8 @@ onde a IA pode mexer no texto.)
 | Dado | Vai para onde | Quando |
 |---|---|---|
 | Áudio bruto (.m4a) | Google Drive (armazenamento pessoal seu) | Sempre, como transporte celular→computador |
-| Áudio bruto | **Nunca** sai do seu computador Windows depois disso | — |
+| Áudio bruto | OpenAI | Somente quando colocado deliberadamente em `VoiceCaptures/Reuniões`, para transcrição e diarização |
+| Áudio bruto | **Não é enviado para API de transcrição** | Nas demais pastas (ideias, livros, reflexões e terapia) |
 | Texto transcrito | Anthropic (Claude API), só o texto | A cada gravação, na etapa de síntese/classificação |
 | Markdown final | Só o seu vault local do Obsidian | — |
 

@@ -17,6 +17,7 @@ from .config import Config, load_config
 from .errors_note import write_errors_note
 from .hashing import sha256_file
 from .pipeline import process_item
+from .meeting_pipeline import process_mobile_meeting
 from .state import StateStore
 
 AUDIO_EXTENSIONS = {".m4a", ".mp3", ".wav", ".caf", ".aac", ".mp4"}
@@ -56,15 +57,16 @@ def scan_inbox(inbox_dir: Path) -> list[Path]:
 
 def run_all(config: Config) -> int:
     state = StateStore(config.state_file)
-    files = scan_inbox(config.inbox_dir)
+    files = [(path, False) for path in scan_inbox(config.inbox_dir)]
+    files += [(path, True) for path in scan_inbox(config.resolved_meeting_inbox_dir)]
 
     processed = skipped = held_errors = errors = 0
-    for path in files:
+    for path, is_meeting in files:
         if not _is_stable(path):
             logging.info("Ignorando %s (ainda sincronizando)", path.name)
             continue
 
-        result = process_item(path, config, state)
+        result = process_mobile_meeting(path, config, state) if is_meeting else process_item(path, config, state)
         if result == "done":
             processed += 1
             logging.info("OK: %s", path.name)
@@ -107,7 +109,12 @@ def run_reprocess(config: Config, hash_prefix: str) -> int:
         logging.error("Audio arquivado nao encontrado para reprocessar: %s", audio_path)
         return 1
 
-    result = process_item(audio_path, config, state, force=True)
+    is_mobile_meeting = item.source_filename.upper().startswith("REUNIÃO -")
+    result = (
+        process_mobile_meeting(audio_path, config, state, force=True)
+        if is_mobile_meeting
+        else process_item(audio_path, config, state, force=True)
+    )
     write_errors_note(config.error_note_path, state.errors())
     logging.info("Reprocessamento de %s: %s", content_hash[:16], result)
     return 0 if result == "done" else 1
