@@ -29,7 +29,7 @@ def make_meta():
         recorded_at=datetime(2026, 7, 23, 22, 14),
         audio_archive_path="data/audio_archive/aaaa.m4a",
         transcription_model="faster-whisper-small",
-        processing_model="claude-sonnet-5",
+        processing_model="gpt-4.1",
     )
 
 

@@ -37,8 +37,6 @@ class Config:
     data_dir: Path
     whisper_model: str
     whisper_language: str
-    anthropic_model: str
-    anthropic_api_key: str
     audio_retention_days: int
     vault_meeting_dir: Path
     vault_therapy_dir: Path
@@ -49,6 +47,7 @@ class Config:
     vault_books_dir: Path | None = None
     meeting_inbox_dir: Path | None = None
     openai_api_key: str = ""
+    extraction_model: str = "gpt-4.1"
     meeting_transcription_model: str = "gpt-4o-transcribe-diarize"
     speaker_reference_path: Path | None = None
     known_speaker_name: str = "Hellena"
@@ -115,13 +114,6 @@ def load_config(path: Path | str = DEFAULT_CONFIG_PATH) -> Config:
     load_dotenv()
     raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
 
-    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
-    if not api_key:
-        raise RuntimeError(
-            "ANTHROPIC_API_KEY nao definida. Copie .env.example para .env e "
-            "preencha a chave."
-        )
-
     vault_inbox_dir = Path(raw["vault_inbox_dir"])
     desktop_raw = raw.get("desktop", {}) or {}
     hotkeys = dict(DEFAULT_HOTKEYS)
@@ -134,8 +126,6 @@ def load_config(path: Path | str = DEFAULT_CONFIG_PATH) -> Config:
         whisper_model=raw.get("whisper_model", "small"),
         whisper_language=raw.get("whisper_language", "pt"),
         whisper_initial_prompt=raw.get("whisper_initial_prompt", ""),
-        anthropic_model=raw.get("anthropic_model", "claude-sonnet-5"),
-        anthropic_api_key=api_key,
         audio_retention_days=int(raw.get("audio_retention_days", 30)),
         vault_meeting_dir=Path(desktop_raw.get("vault_meeting_dir", vault_inbox_dir.parent / "Reuniões")),
         vault_therapy_dir=Path(desktop_raw.get("vault_therapy_dir", vault_inbox_dir.parent / "Terapia")),
@@ -145,6 +135,7 @@ def load_config(path: Path | str = DEFAULT_CONFIG_PATH) -> Config:
         vault_books_dir=Path(raw["vault_books_dir"]) if raw.get("vault_books_dir") else None,
         meeting_inbox_dir=Path(raw["meeting_inbox_dir"]) if raw.get("meeting_inbox_dir") else None,
         openai_api_key=os.environ.get("OPENAI_API_KEY", ""),
+        extraction_model=raw.get("extraction_model", "gpt-4.1"),
         meeting_transcription_model=raw.get(
             "meeting_transcription_model", "gpt-4o-transcribe-diarize"
         ),

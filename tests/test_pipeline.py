@@ -17,8 +17,8 @@ def make_config(tmp_path) -> Config:
         data_dir=tmp_path / "data",
         whisper_model="small",
         whisper_language="pt",
-        anthropic_model="claude-sonnet-5",
-        anthropic_api_key="fake-key",
+        extraction_model="gpt-4.1",
+        openai_api_key="fake-key",
         audio_retention_days=30,
         vault_meeting_dir=tmp_path / "vault" / "Inbox" / "Reuniões",
         vault_therapy_dir=tmp_path / "vault" / "Inbox" / "Terapia",
@@ -50,7 +50,7 @@ def fake_process(raw_text: str, api_key: str, model: str) -> ProcessedCapture:
 
 
 def failing_process(raw_text: str, api_key: str, model: str) -> ProcessedCapture:
-    raise RuntimeError("Claude API indisponível")
+    raise RuntimeError("OpenAI indisponível")
 
 
 def fake_reflection_process(raw_text: str, api_key: str, model: str) -> ProcessedReflection:
@@ -111,7 +111,7 @@ def test_process_item_failure_preserves_audio_and_marks_error(tmp_path):
     content_hash = next(iter(state.all_items()))
     item = state.get(content_hash)
     assert item.status == STATUS_ERROR
-    assert "Claude API indisponível" in item.error
+    assert "OpenAI indisponível" in item.error
     # audio ja tinha sido arquivado antes da falha do processamento por IA
     assert Path(item.audio_archive_path).exists()
     # transcricao bruta tambem foi preservada

@@ -42,8 +42,10 @@ whisper_language: "pt"
 # como devem aparecer:
 whisper_initial_prompt: "Hellena, We Founders, Ravi, Yá."
 
-# Modelo da Claude API usado para sintese/classificacao (so texto e enviado).
-anthropic_model: "claude-sonnet-5"
+# Modelo da OpenAI usado para sintese/classificacao (so texto e enviado).
+# A chave vem de OPENAI_API_KEY no ambiente (a mesma usada na transcricao
+# de reunioes).
+extraction_model: "gpt-4.1"
 
 # Depois de quantos dias um audio ja processado com sucesso pode ser apagado
 # por "python -m voice_capture.cleanup" (comando manual, nao automatico).

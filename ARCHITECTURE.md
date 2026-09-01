@@ -85,9 +85,12 @@ ordens de grandeza menor que enviar áudio bruto.
 | OpenAI API | Equivalente em capacidade | Chave de API paga por uso |
 | Modelo local (Ollama) | Modelos locais viáveis em CPU/GPU doméstica tendem a obedecer pior instruções longas e restritivas, e classificam com menos consistência | Zero custo por chamada, mas mais infraestrutura para manter |
 
-**Decisão:** Claude API. O texto transcrito (não o áudio) é o único dado enviado.
-Isso será declarado de forma explícita no `README.md` e nos comentários de
-configuração.
+**Decisão:** OpenAI (function calling), não Claude API. Qualidade de síntese
+equivalente para este caso de uso, e a chave OpenAI já era exigida para a
+transcrição de reuniões (seção 2.3) — usar o mesmo provedor nos dois pontos
+elimina uma segunda chave/secret para rotacionar e manter viva. O texto
+transcrito (não o áudio) continua sendo o único dado enviado. Isso está
+declarado de forma explícita no `README.md` e nos comentários de configuração.
 
 ### 2.5 O que **não** foi escolhido, e por quê
 
@@ -112,7 +115,7 @@ flowchart TD
     F --> G["2. Arquiva o áudio bruto localmente"]
     G --> H["3. Transcreve local (faster-whisper, pt-BR)"]
     H --> I["4. Salva transcrição bruta (.txt)"]
-    I --> J["5. Envia SÓ o texto para a Claude API<br/>(síntese, classificação, entidades)"]
+    I --> J["5. Envia SÓ o texto para a OpenAI<br/>(síntese, classificação, entidades)"]
     J --> K["6. Gera Markdown com frontmatter"]
     K --> L["7. Escreve no vault do Obsidian<br/>(escrita atômica, sem sobrescrever)"]
     L --> M["8. Atualiza estado local (data/state.json)"]
@@ -131,7 +134,7 @@ O MVP entrega o caminho completo ponta a ponta com o mínimo de partes móveis:
 - Captura via Atalho iOS.
 - Transporte via Google Drive.
 - Transcrição local (Whisper).
-- Processamento via Claude API.
+- Processamento via OpenAI (function calling).
 - Markdown gerado e salvo no vault.
 - Estado local evita duplicação e permite reprocessar.
 - Erros nunca silenciosos: viram nota no vault + linha de log.
@@ -154,7 +157,7 @@ hellena-capturas/
 ├── requirements.txt
 ├── pyproject.toml
 ├── config.example.yaml        # copiar para config.yaml (gitignored)
-├── .env.example                # copiar para .env (gitignored) — ANTHROPIC_API_KEY
+├── .env.example                # copiar para .env (gitignored) — OPENAI_API_KEY
 ├── docs/
 │   ├── ios-shortcut-setup.md
 │   └── windows-setup.md
@@ -163,7 +166,7 @@ hellena-capturas/
 │   ├── hashing.py               # sha256 do arquivo de áudio
 │   ├── state.py                  # fila local em JSON (data/state.json)
 │   ├── transcribe.py              # faster-whisper
-│   ├── process_ai.py               # chamada à Claude API + regras de autoria
+│   ├── process_ai.py               # chamada à OpenAI + regras de autoria
 │   ├── markdown_writer.py           # monta o .md e escreve no vault
 │   ├── errors_note.py                # escreve falhas como nota no vault
 │   ├── pipeline.py                    # orquestra um item inteiro
@@ -215,7 +218,7 @@ related_topics: [vigilância, cuidado, relacionamentos]
 possible_connections: []           # v1 não busca no vault existente — ver seção 4
 audio_file: data/audio_archive/3f9a1c....m4a
 transcription_model: faster-whisper-small
-processing_model: claude-sonnet-5
+processing_model: gpt-4.1
 ---
 ```
 
@@ -298,8 +301,8 @@ onde a IA pode mexer no texto.)
 ## 9. Estratégia de processamento por IA
 
 - Entrada: **apenas o texto** da transcrição bruta + a data/hora da gravação.
-  O áudio nunca é enviado à Claude API.
-- Saída: forçada via *tool use* (function calling) da Claude API, com um schema
+  O áudio nunca é enviado à OpenAI.
+- Saída: forçada via *tool use* (function calling) da OpenAI, com um schema
   fixo — não é "peça um markdown e espere que venha certo", é um JSON validado
   que depois vira o `.md`.
 - O prompt de sistema embute, quase literalmente, as regras que você definiu:
@@ -335,7 +338,7 @@ onde a IA pode mexer no texto.)
   vault, listando o que falhou e por quê — porque o Obsidian é o lugar que você
   já visita todo dia, ao contrário de um log técnico que ninguém vai abrir.
 - **Reprocessamento:** `python -m voice_capture.run --reprocess <hash>` roda o
-  pipeline de novo para um item específico (útil se a Claude API teve uma saída
+  pipeline de novo para um item específico (útil se a OpenAI teve uma saída
   ruim, por exemplo), sem precisar reenviar o áudio do zero.
 - **Interrupção no meio do processo:** como cada etapa grava seu resultado
   intermediário em disco (`audio_archive` → `transcripts_raw` → `.md`), uma
@@ -349,10 +352,10 @@ onde a IA pode mexer no texto.)
 | Áudio bruto (.m4a) | Google Drive (armazenamento pessoal seu) | Sempre, como transporte celular→computador |
 | Áudio bruto | OpenAI | Somente quando colocado deliberadamente em `VoiceCaptures/Reuniões`, para transcrição e diarização |
 | Áudio bruto | **Não é enviado para API de transcrição** | Nas demais pastas (ideias, livros, reflexões e terapia) |
-| Texto transcrito | Anthropic (Claude API), só o texto | A cada gravação, na etapa de síntese/classificação |
+| Texto transcrito | OpenAI, só o texto | A cada gravação, na etapa de síntese/classificação |
 | Markdown final | Só o seu vault local do Obsidian | — |
 
-Se em algum momento você quiser eliminar até o envio de texto para a Claude API,
+Se em algum momento você quiser eliminar até o envio de texto para a OpenAI,
 a arquitetura permite trocar `process_ai.py` por um modelo local (Ollama) sem
 mexer no resto do pipeline — é uma peça isolada.
 
@@ -361,7 +364,7 @@ mexer no resto do pipeline — é uma peça isolada.
 1. Estrutura do projeto + configuração (`config.py`, `.env`, `config.yaml`).
 2. `state.py` + `hashing.py` — fila local, sem IA nem transcrição ainda.
 3. `transcribe.py` — Whisper local isolado, testável com um áudio de exemplo.
-4. `process_ai.py` — chamada à Claude API isolada, testável com um texto fixo.
+4. `process_ai.py` — chamada à OpenAI isolada, testável com um texto fixo.
 5. `markdown_writer.py` — monta e escreve o `.md`, com escrita atômica e dedupe.
 6. `pipeline.py` — liga tudo, com tratamento de erro por etapa.
 7. `errors_note.py` — falhas viram nota visível no vault.

@@ -40,7 +40,7 @@ data_dir: "data"
 whisper_model: "small"
 whisper_language: "pt"
 whisper_initial_prompt: "Hellena, We Founders, Ravi, Yá."
-anthropic_model: "claude-sonnet-5"
+extraction_model: "gpt-4.1"
 audio_retention_days: 30
 
 # Opcional: só necessário se for usar a captura por atalho no desktop
@@ -79,11 +79,11 @@ transcrição não tem como saber. Nesses casos a transcrição bruta pode sair
 "IA" onde era "Yá" (ou o contrário) mesmo com o termo na lista; revise à
 mão quando o contexto permitir.
 
-Edite `.env` com sua chave da Claude API (crie em
-[console.anthropic.com](https://console.anthropic.com)):
+Edite `.env` com sua chave da OpenAI (crie em
+[platform.openai.com](https://platform.openai.com)):
 
 ```
-ANTHROPIC_API_KEY=sk-ant-...
+OPENAI_API_KEY=sk-...
 ```
 
 `config.yaml` e `.env` **não são commitados** (estão no `.gitignore`) — contêm

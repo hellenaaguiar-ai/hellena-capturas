@@ -9,10 +9,9 @@ description = "Captura pessoal de pensamentos por voz com processamento automati
 requires-python = ">=3.11"
 dependencies = [
     "faster-whisper>=1.0.0",
-    "anthropic>=0.40.0",
     "PyYAML>=6.0",
     "python-dotenv>=1.0.0",
-    "httpx>=0.27.0",
+    "openai>=3.2.0,<4",
 ]
 
 [project.optional-dependencies]

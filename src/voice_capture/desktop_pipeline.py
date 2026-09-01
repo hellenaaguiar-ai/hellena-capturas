@@ -125,23 +125,23 @@ def process_desktop_recording(
             mic_audio_path=str(mic_path) if mic_path is not None else None,
             system_audio_path=str(system_path) if system_path is not None else None,
             transcription_model=f"faster-whisper-{config.whisper_model}",
-            processing_model=config.anthropic_model,
+            processing_model=config.extraction_model,
         )
 
         if mode.note_type == NOTE_TYPE_MEETING:
-            processed_meeting = process_meeting_fn(labeled_text, config.anthropic_api_key, config.anthropic_model)
+            processed_meeting = process_meeting_fn(labeled_text, config.openai_api_key, config.extraction_model)
             markdown = build_meeting_markdown(processed_meeting, mic_text, system_text, meta)
             title = processed_meeting.title
         elif mode.note_type == NOTE_TYPE_THERAPY:
-            processed_therapy = process_therapy_fn(labeled_text, config.anthropic_api_key, config.anthropic_model)
+            processed_therapy = process_therapy_fn(labeled_text, config.openai_api_key, config.extraction_model)
             markdown = build_therapy_markdown(processed_therapy, mic_text, system_text, meta)
             title = processed_therapy.title
         elif mode.note_type == NOTE_TYPE_REFLECTION:
-            processed_reflection = process_reflection_fn(mic_text, config.anthropic_api_key, config.anthropic_model)
+            processed_reflection = process_reflection_fn(mic_text, config.openai_api_key, config.extraction_model)
             markdown = build_reflection_markdown(processed_reflection, mic_text, meta)
             title = processed_reflection.title
         else:
-            processed_class = process_class_fn(system_text, config.anthropic_api_key, config.anthropic_model)
+            processed_class = process_class_fn(system_text, config.openai_api_key, config.extraction_model)
             markdown = build_class_markdown(processed_class, system_text, meta)
             title = processed_class.title
 

@@ -19,7 +19,7 @@ arquitetura. Este README é só o "como instalar e usar".
 iPhone (Atalho + Botão de Ação)
   → Google Drive (transporte)
     → Windows: Whisper local transcreve (áudio nunca sai da máquina)
-      → Claude API estrutura o texto (só texto, nunca áudio)
+      → OpenAI estrutura o texto (só texto, nunca áudio)
         → Markdown escrito no vault do Obsidian
 ```
 
@@ -33,13 +33,13 @@ sem microfone:
 Ctrl+Espaço / Ctrl+Alt+D / Ctrl+Alt+R / Ctrl+Alt+T / Ctrl+Alt+A
   → grava mic (+ áudio do sistema se o modo pedir; aula só grava sistema)
     → Whisper local transcreve cada trilha
-      → Claude API estrutura conforme o modo (ideia / reflexão / reunião / terapia / aula)
+      → OpenAI estrutura conforme o modo (ideia / reflexão / reunião / terapia / aula)
         → Markdown escrito no vault do Obsidian
 ```
 
 Detalhes de privacidade — o que sai da sua máquina e para onde — estão na
 seção 12 de [ARCHITECTURE.md](ARCHITECTURE.md) (vale para os dois fluxos: só
-texto trafega para a Claude API, áudio nunca sai da máquina).
+texto trafega para a OpenAI, áudio nunca sai da máquina).
 
 ## Instalação
 
@@ -109,7 +109,7 @@ pip install -r requirements.txt
 pytest
 ```
 
-Os testes usam transcrição e chamada à Claude API mockadas — não exigem
+Os testes usam transcrição e chamada à OpenAI mockada — não exigem
 modelo Whisper baixado nem chave de API real para rodar.
 
 ## Falas espontâneas sobre livros

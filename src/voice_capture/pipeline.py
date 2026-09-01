@@ -114,7 +114,7 @@ def process_item(
         capture_type = detect_capture_type(audio_path)
         if capture_type == CAPTURE_REFLECTION:
             processed_reflection = reflection_process_fn(
-                transcript_text, config.anthropic_api_key, config.anthropic_model
+                transcript_text, config.openai_api_key, config.extraction_model
             )
             reflection_meta = DesktopNoteMeta(
                 content_hash=content_hash,
@@ -123,7 +123,7 @@ def process_item(
                 mic_audio_path=str(archive_path),
                 system_audio_path=None,
                 transcription_model=f"faster-whisper-{config.whisper_model}",
-                processing_model=config.anthropic_model,
+                processing_model=config.extraction_model,
                 source="mobile-voice",
             )
             markdown = build_reflection_markdown(
@@ -133,7 +133,7 @@ def process_item(
             final_path = write_note_atomic(config.vault_reflection_dir, filename, markdown)
         else:
             processed = process_fn(
-                transcript_text, config.anthropic_api_key, config.anthropic_model
+                transcript_text, config.openai_api_key, config.extraction_model
             )
 
             meta = NoteMeta(
@@ -142,7 +142,7 @@ def process_item(
                 recorded_at=recorded_at,
                 audio_archive_path=str(archive_path),
                 transcription_model=f"faster-whisper-{config.whisper_model}",
-                processing_model=config.anthropic_model,
+                processing_model=config.extraction_model,
             )
             route_to_book = bool(
                 processed.book_title and processed.book_title_confidence == "alta"

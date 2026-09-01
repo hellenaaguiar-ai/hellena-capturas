@@ -1,6 +1,6 @@
 """Processamento por IA: so o TEXTO transcrito e enviado, nunca o audio.
 
-Usa a Claude API com tool use (saida estruturada por schema), para nao
+Usa a OpenAI com function calling (saida estruturada por schema), para nao
 depender de "pedir markdown e torcer para vir certo".
 """
 from __future__ import annotations

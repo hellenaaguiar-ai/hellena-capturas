@@ -19,8 +19,8 @@ def make_config(tmp_path) -> Config:
         data_dir=tmp_path / "data",
         whisper_model="small",
         whisper_language="pt",
-        anthropic_model="claude-sonnet-5",
-        anthropic_api_key="fake-key",
+        extraction_model="gpt-4.1",
+        openai_api_key="fake-key",
         audio_retention_days=30,
         vault_meeting_dir=tmp_path / "vault" / "Inbox" / "Reuniões",
         vault_therapy_dir=tmp_path / "vault" / "Inbox" / "Terapia",
@@ -62,7 +62,7 @@ def fake_meeting_process(labeled_text: str, api_key: str, model: str) -> Process
 
 
 def failing_meeting_process(labeled_text: str, api_key: str, model: str) -> ProcessedMeeting:
-    raise RuntimeError("Claude API indisponível")
+    raise RuntimeError("OpenAI indisponível")
 
 
 def fake_therapy_process(labeled_text: str, api_key: str, model: str) -> ProcessedTherapy:
@@ -217,7 +217,7 @@ def test_desktop_recording_failure_marks_error_and_preserves_transcript(tmp_path
     items = list(state.all_items().values())
     assert len(items) == 1
     assert items[0].status == STATUS_ERROR
-    assert "Claude API indisponível" in items[0].error
+    assert "OpenAI indisponível" in items[0].error
     assert Path(items[0].transcript_raw_path).exists()
     assert list(mode.vault_dir.glob("*.md")) == []
 

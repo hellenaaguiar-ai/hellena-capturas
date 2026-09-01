@@ -1,8 +1,9 @@
-"""Helper compartilhado para chamadas estruturadas (tool use) a Claude API.
-Usado tanto pelo processamento de ideias (mobile) quanto pelo de reuniao e
-terapia (desktop) - so o texto ja transcrito trafega, nunca audio."""
+"""Helper compartilhado para chamadas estruturadas (function calling) a
+OpenAI. Usado tanto pelo processamento de ideias (mobile) quanto pelo de
+reuniao e terapia (desktop) - so o texto ja transcrito trafega, nunca audio."""
 from __future__ import annotations
 
+import json
 import re
 
 _ITEM_TAG_RE = re.compile(r"<item>(.*?)</item>", re.DOTALL)
@@ -37,21 +38,34 @@ def call_structured_tool(
     model: str,
     max_tokens: int = 2048,
 ) -> dict:
-    import anthropic
+    from openai import OpenAI
 
-    client = anthropic.Anthropic(api_key=api_key)
-    response = client.messages.create(
+    client = OpenAI(api_key=api_key)
+    function_name = tool_schema["name"]
+    response = client.chat.completions.create(
         model=model,
         max_tokens=max_tokens,
-        system=system_prompt,
-        tools=[tool_schema],
-        tool_choice={"type": "tool", "name": tool_schema["name"]},
-        messages=[{"role": "user", "content": user_content}],
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_content},
+        ],
+        tools=[
+            {
+                "type": "function",
+                "function": {
+                    "name": function_name,
+                    "description": tool_schema.get("description", ""),
+                    "parameters": tool_schema["input_schema"],
+                },
+            }
+        ],
+        tool_choice={"type": "function", "function": {"name": function_name}},
     )
-    if response.stop_reason == "max_tokens":
+    choice = response.choices[0]
+    if choice.finish_reason == "length":
         raise RuntimeError(
-            "Resposta da Claude interrompida pelo limite de tokens; "
+            "Resposta da OpenAI interrompida pelo limite de tokens; "
             "a captura nao sera salva como se estivesse completa."
         )
-    tool_use = next(b for b in response.content if b.type == "tool_use")
-    return tool_use.input
+    tool_call = choice.message.tool_calls[0]
+    return json.loads(tool_call.function.arguments)
